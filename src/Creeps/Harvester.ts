@@ -1,7 +1,8 @@
 import { HarvesterStatus } from "Enums/HarvesterEnums";
 import { IHarvester } from "Interfaces/IHarvester";
 import { Screep } from "./Screep";
-import { SourceManager } from "Modules/SourceManager";
+import { SourceManager } from "Managers/SourceManager";
+import { RoomManager } from "Managers/RoomManager";
 
 export class Harvester extends Screep implements IHarvester{
 
@@ -54,6 +55,9 @@ export class Harvester extends Screep implements IHarvester{
         // If we reached max energy while harvesting
         else if (this.Status == HarvesterStatus.Harvesting && this.creep.carry.energy == this.creep.carryCapacity) {
             this.Status = HarvesterStatus.Dumping;
+
+            let bestDeposit: Structure = RoomManager.getBestDeposit(this);
+            this.deposit(bestDeposit);
         }
     }
 
@@ -64,6 +68,15 @@ export class Harvester extends Screep implements IHarvester{
         let harvestResult = this.creep.harvest(source);
         if (harvestResult == ERR_NOT_IN_RANGE) {
             super.moveTo(source, this._pathColor);
+        }
+    }
+
+    deposit(target: Structure) {
+        this.TargetDumpID = target.id;
+
+        let transferResult = this.creep.transfer(target, RESOURCE_ENERGY);
+        if (transferResult == ERR_NOT_IN_RANGE) {
+            super.moveTo(target, this._pathColor);
         }
     }
 }

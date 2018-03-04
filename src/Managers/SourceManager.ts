@@ -6,7 +6,7 @@ export namespace SourceManager {
     export var sources: Source[];
 
     export function loadSources() {
-        this._sources = RoomManager.getFirstRoom().find(FIND_SOURCES);
+        sources = RoomManager.getFirstRoom().find(FIND_SOURCES);
     }
 
     export function GetBestSource(creep: Creep): Source {
@@ -43,7 +43,7 @@ export namespace SourceManager {
     export function creepsTargetingSource(source: Source): number {
         let creepCount: number = 0;
 
-        for (let creepName in CreepManager) {
+        for (let creepName in CreepManager.creepNames) {
             creepCount = Game.creeps[creepName].memory.MoveID == source.id ? creepCount : ++creepCount;
         }
 

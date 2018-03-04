@@ -1,3 +1,5 @@
+import { SourceManager } from "Managers/SourceManager";
+
 export class Screep{
 
     creep: Creep;
@@ -25,8 +27,17 @@ export class Screep{
     constructor(creep: Creep)
     {
         this.creep = creep;
-        this.MovePath = creep.memory.MovePath;
-        this.MoveID = creep.memory.MoveID;
+        console.log('attached creep');
+        if (creep.memory.MovePath == 0) {
+            console.log('updating target');
+            this.updateTarget(SourceManager.GetBestSource(creep));
+        }
+        else {
+            this.MovePath = Room.deserializePath(creep.memory.MovePath);
+            console.log('loaded path');
+            this.MoveID = creep.memory.MoveID;
+        }
+        console.log('creep initialized');
     }
 
     moveTo(target: Structure | Source, pathColor?: string) {
@@ -36,6 +47,7 @@ export class Screep{
         // If so, update the target ID and MovePath in memory
         if (newTarget)
         {
+            console.log('Received new target');
             this.updateTarget(target);
 
             if (pathColor) {
@@ -46,15 +58,22 @@ export class Screep{
             }
         }
 
-        this.MoveToTarget();
+        this.moveToTarget();
+    }
+
+    distanceTo(pos: RoomPosition) {
+        return Math.sqrt(Math.pow(pos.x - this.creep.pos.x, 2) + Math.pow(pos.y - this.creep.pos.y, 2));
     }
 
     updateTarget(target: Structure | Source) {
         this.MoveID = target.id;
         this.MovePath = this.creep.room.findPath(this.creep.pos, target.pos, { ignoreCreeps: true });
+        console.log('targets updated');
     }
 
-    MoveToTarget() {
+    moveToTarget() {
         return this.creep.moveByPath(this.MovePath);
     }
+
+
 }
