@@ -9,25 +9,30 @@ export namespace RoomManager {
         this.rooms = Game.rooms;
 
         loadRoomNames();
-
-        for (let roomName in rooms) {
-            this.roomNames.push(roomName);
-        }
     }
 
     export function getFirstRoom(): Room {
-        return rooms[this.roomNames[0]];
+        return rooms[roomNames[0]];
     }
 
     export function getBestDeposit(creep: Screep): Structure {
         // Get a list of structures that need energy ordered from closest to furtherst linear distance
-        let sortedStructures: any = getFirstRoom().find(FIND_STRUCTURES, {
-            filter: function (object) {
-                return (object.structureTypee == STRUCTURE_SPAWN || object.structureType == STRUCTURE_EXTENSION)
-                    && (object.energy < object.energyCapacity)
+        // let sortedStructures: any = getFirstRoom().find(FIND_STRUCTURES, {
+        //     filter: function (object) {
+        //         return (object.structureType == STRUCTURE_SPAWN || object.structureType == STRUCTURE_EXTENSION)
+        //             && (object.energy < object.energyCapacity)
+        //     }
+        // }).sort((a: Structure, b: Structure): number => {return (creep.distanceTo(a.pos) - creep.distanceTo(b.pos))});
+
+        let sortedStructures: any = getFirstRoom().find(FIND_MY_STRUCTURES, {
+            filter: function(structure) {
+                return ((structure.structureType == STRUCTURE_SPAWN
+                    || structure.structureType == STRUCTURE_EXTENSION)
+                    && structure.energy < structure.energyCapacity);
             }
         }).sort((a: Structure, b: Structure): number => {return (creep.distanceTo(a.pos) - creep.distanceTo(b.pos))});
 
+        //console.log(sortedStructures);
         return sortedStructures[0];
     }
 

@@ -7,16 +7,17 @@ export namespace GameManager {
 
 
 
-    export function SetValues() {
+    export function SetGlobals() {
         RoomManager.loadRooms();
         SpawnManager.loadSpawns();
         SourceManager.loadSources();
-        CreepManager.loadCreeps();
 
-        console.log('Managers Loaded');
+        console.log('Global Values Loaded');
     }
 
     export function Start() {
+        CreepManager.loadCreeps();
+
         CreepManager.loop();
     }
 }

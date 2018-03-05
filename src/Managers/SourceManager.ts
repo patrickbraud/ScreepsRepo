@@ -10,13 +10,9 @@ export namespace SourceManager {
     }
 
     export function GetBestSource(creep: Creep): Source {
-        let orderedSources: Source[] = sources.sort(function(a, b) {return DistanceTo(creep, a.pos) - DistanceTo(creep, b.pos)});
+        let filteredSources: Source[] = SourceManager.sources.filter( src => creepsTargetingSource(src) < maxCreepCount(src));
+        let orderedSources: Source[] = filteredSources.sort(function (a, b) { return DistanceTo(creep, a.pos) - DistanceTo(creep, b.pos); });
 
-        orderedSources.forEach(source => {
-            if (creepsTargetingSource(source) < maxCreepCount(source)) {
-                return source;
-            }
-        });
         return orderedSources[0];
     }
 
@@ -51,7 +47,7 @@ export namespace SourceManager {
     }
 
     function positionIsValid(pos: RoomPosition): boolean{
-        return RoomManager.getFirstRoom().lookForAt(LOOK_TERRAIN, pos)['terrrain'] != 'wall';
+        return RoomManager.getFirstRoom().lookForAt(LOOK_TERRAIN, pos)['terrain'] != 'wall';
     }
 
     // Get the linear distance from a creep to a source

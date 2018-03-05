@@ -4,19 +4,20 @@ import { SpawnManager } from "./SpawnManager";
 export namespace CreepManager {
 
     export var creeps: { [creepName: string]: Creep };
-    export var harvesters: Harvester[] = [];
 
     export function loadCreeps() {
         creeps = Game.creeps;
+    }
 
+    export function loop() {
+
+        let harvesters: Harvester[] = [];
         for (let creepName in creeps) {
             if (creeps[creepName].memory.Role == 'harvester') {
                 harvesters.push(new Harvester(creeps[creepName]));
             }
         }
-    }
 
-    export function loop() {
         if (harvesters.length < 1) {
             SpawnHarvester([WORK, CARRY, MOVE]);
         }
@@ -36,6 +37,7 @@ export namespace CreepManager {
                 TargetDumpID: 0,
                 MovePath: 0,
                 MoveID: 0,
+                Status: 0
             });
         }
     }

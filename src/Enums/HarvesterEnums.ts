@@ -1,4 +1,4 @@
 export enum HarvesterStatus{
-    Harvesting,
-    Dumping
+    Harvesting = 0,
+    Dumping = 1
 }
