@@ -9,28 +9,41 @@ export namespace SourceManager {
         sources = RoomManager.getFirstRoom().find(FIND_SOURCES);
     }
 
-    export function GetBestSource(creep: Creep): Source {
+    export function getBestSource(creep: Creep): Source {
         let filteredSources: Source[] = SourceManager.sources.filter( src => creepsTargetingSource(src) < maxCreepCount(src));
         let orderedSources: Source[] = filteredSources.sort(function (a, b) { return DistanceTo(creep, a.pos) - DistanceTo(creep, b.pos); });
 
         return orderedSources[0];
     }
 
+    export function getSourceByID(sourceID: string): Source {
+        let targetSource: Source = null;
+        sources.forEach(source => {
+            if (source.id == sourceID) {
+                targetSource = source;
+                return;
+            }
+        });
+        return targetSource;
+    }
+
     export function maxCreepCount(source: Source): number {
         let validSpaceCount: number = 0;
          /*
-            * * *
-            *   *
             x * *
-            Start at the x
+            * s *
+            * * y
+            Start at the x, end at the y
         */
-        let currentPos = new RoomPosition(source.pos.x, source.pos.y - 1, source.pos.roomName);
-        for (let xPos = -1; xPos <= 1; xPos++) {
-            for (let yPos = -1; yPos <= 1; yPos++) {
-                if (xPos != 0 && yPos != 0) {
-                    validSpaceCount = positionIsValid(currentPos) ? ++validSpaceCount : validSpaceCount;
+        let currentPos = new RoomPosition(source.pos.x - 1, source.pos.y - 1, source.pos.roomName);
+        for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
+            for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
+                if (currentPos != source.pos) {
+                    let isValid = positionIsValid(currentPos);
+                    validSpaceCount = isValid ? ++validSpaceCount : validSpaceCount;
                 }
             }
+            currentPos.y -= 3;
         }
 
         return validSpaceCount;
@@ -47,7 +60,9 @@ export namespace SourceManager {
     }
 
     function positionIsValid(pos: RoomPosition): boolean{
-        return RoomManager.getFirstRoom().lookForAt(LOOK_TERRAIN, pos)['terrain'] != 'wall';
+        let lookResult = RoomManager.getFirstRoom().lookForAt(LOOK_TERRAIN, pos);
+        //console.log('x: ' + pos.x + ' y: ' + pos.y + ' - ' + lookResult.toString() + ' - ' + (lookResult.toString() != 'wall'));
+        return !(lookResult.toString() == 'wall');
     }
 
     // Get the linear distance from a creep to a source

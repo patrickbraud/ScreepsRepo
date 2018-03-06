@@ -46,32 +46,49 @@ export class Harvester extends Screep implements IHarvester{
     }
 
     work() {
+        // If we are harvesting and we are full
         if(this.Status == HarvesterStatus.Harvesting && this.creep.carry.energy == this.creep.carryCapacity) {
             this.Status = HarvesterStatus.Dumping;
             this.creep.say('🔄 deposit');
-            //this.TargetSourceID = '0';
-	    }
+            this.TargetSourceID = "0";
+        }
+        // If w are dumping and we are empty
 	    if(this.Status == HarvesterStatus.Dumping && this.creep.carry.energy == 0) {
 	        this.Status = HarvesterStatus.Harvesting;
-	        this.creep.say('⚒️ harvest');
+            this.creep.say('⚒️ harvest');
+            this.TargetDumpID = "0";
         }
 
         let target: Source | Structure = null;
         if (this.Status == HarvesterStatus.Harvesting)
         {
             //console.log('I should be harvesting');
-
-            this.Status = HarvesterStatus.Harvesting;
-            let bestSource = SourceManager.GetBestSource(this.creep);
-            target = bestSource;
+            let targetSource: Source = null;
+            if (this.TargetSourceID == "0") {
+                console.log('Getting new source');
+                targetSource = SourceManager.getBestSource(this.creep);
+                this.TargetSourceID = targetSource.id;
+            }
+            else {
+                targetSource = SourceManager.getSourceByID(this.TargetSourceID);
+            }
+            target = targetSource;
         }
         else if (this.Status == HarvesterStatus.Dumping) {
+
             //console.log('I should be dumping');
-
-            this.Status = HarvesterStatus.Dumping;
-
-            let bestDeposit: Structure = RoomManager.getBestDeposit(this);
-            target = bestDeposit;
+            let targetDeposit: any = null;
+            if (this.TargetDumpID == "0") {
+                targetDeposit = RoomManager.getBestDeposit(this);
+                this.TargetDumpID = targetDeposit.id;
+            }
+            else {
+                targetDeposit = Game.getObjectById(this.TargetDumpID);
+                if (targetDeposit.energy == targetDeposit.energyCapacity) {
+                    targetDeposit = RoomManager.getBestDeposit(this);
+                }
+            }
+            target = targetDeposit;
         }
 
         if (target != null && target != undefined) {
@@ -85,11 +102,9 @@ export class Harvester extends Screep implements IHarvester{
     doAction(target: Source | Structure) {
 
         if (this.Status == HarvesterStatus.Harvesting) {
-            this.TargetSourceID = target.id;
             this.harvest(target as Source);
         }
         else if (this.Status == HarvesterStatus.Dumping) {
-            this.TargetDumpID = target.id;
             this.deposit(target as Structure);
         }
     }

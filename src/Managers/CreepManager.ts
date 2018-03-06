@@ -35,7 +35,7 @@ export namespace CreepManager {
                 Role: 'harvester',
                 TargetSourceID: 0,
                 TargetDumpID: 0,
-                MovePath: 0,
+                MovePath: "",
                 MoveID: 0,
                 Status: 0
             });

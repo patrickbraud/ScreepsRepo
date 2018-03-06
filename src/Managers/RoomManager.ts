@@ -16,14 +16,8 @@ export namespace RoomManager {
     }
 
     export function getBestDeposit(creep: Screep): Structure {
-        // Get a list of structures that need energy ordered from closest to furtherst linear distance
-        // let sortedStructures: any = getFirstRoom().find(FIND_STRUCTURES, {
-        //     filter: function (object) {
-        //         return (object.structureType == STRUCTURE_SPAWN || object.structureType == STRUCTURE_EXTENSION)
-        //             && (object.energy < object.energyCapacity)
-        //     }
-        // }).sort((a: Structure, b: Structure): number => {return (creep.distanceTo(a.pos) - creep.distanceTo(b.pos))});
-
+        // Find all structures of type spawn or extension that isn't full
+        // Sort by linear distance from this creep
         let sortedStructures: any = getFirstRoom().find(FIND_MY_STRUCTURES, {
             filter: function(structure) {
                 return ((structure.structureType == STRUCTURE_SPAWN
@@ -32,7 +26,6 @@ export namespace RoomManager {
             }
         }).sort((a: Structure, b: Structure): number => {return (creep.distanceTo(a.pos) - creep.distanceTo(b.pos))});
 
-        //console.log(sortedStructures);
         return sortedStructures[0];
     }
 

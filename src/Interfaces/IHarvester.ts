@@ -8,4 +8,6 @@ export interface IHarvester{
     work();
 
     harvest(source: Source);
+
+    deposit(targte: Structure);
 }

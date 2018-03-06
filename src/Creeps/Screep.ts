@@ -28,33 +28,49 @@ export class Screep{
     {
         this.creep = creep;
         this.MoveID = creep.memory.MoveID;
-        this.MovePath = Room.deserializePath(creep.memory.MovePath);
+        if (creep.memory.MovePath != undefined) {
+            this.MovePath = Room.deserializePath(creep.memory.MovePath as string);
+        }
     }
 
-    moveTo(target: Structure | Source, pathColor?: string) {
+    moveTo(target: any, pathColor?: string) {
         //console.log('I should be moving');
 
         // Check if we have a new target than the previous tick
         let newTarget: boolean = !(target.id == this.MoveID);
-        //console.log('New Target: ' + newTarget);
 
         // If so, update the target ID and MovePath in memory
         if (newTarget)
         {
+            //console.log('New Target: ' + newTarget);
             this.updateTarget(target);
-
-            if (pathColor) {
-                // Draw the path for a new target
-                for (let step1 = 0, step2 = 1; step2 < this.MovePath.length; step1++, step2++) {
-                    this.creep.room.visual.line(this.MovePath[step1].x, this.MovePath[step1].y, this.MovePath[step2].x, this.MovePath[step2].y, {color: pathColor });
-                }
-            }
         }
 
         this.moveToTarget();
+
+        if (pathColor) {
+            // Draw the path from our creep to it's target
+            this.printPath(pathColor);
+        }
     }
 
-    updateTarget(target: Structure | Source) {
+    printPath(color: string) {
+
+        let creepPosReached: boolean = false;
+        for (let step1 = 0, step2 = 1; step2 < this.MovePath.length; step1++, step2++) {
+            // Skip all path steps up to and including our creep position
+            if (this.MovePath[step1].x == this.creep.pos.x && this.MovePath[step1].y == this.creep.pos.y) {
+                creepPosReached = true;
+                continue;
+            }
+
+            if (creepPosReached) {
+                this.creep.room.visual.line(this.MovePath[step1].x, this.MovePath[step1].y, this.MovePath[step2].x, this.MovePath[step2].y, {color: color });
+            }
+        }
+    }
+
+    updateTarget(target: any) {
         this.MoveID = target.id;
 
         console.log('Performing FIND Operation');
@@ -62,6 +78,15 @@ export class Screep{
     }
 
     moveToTarget() {
+
+        // if (opts != undefined) {
+        //     console.log('moving by coordinates');
+        //     // remove the first element, since it's our current position
+        //     this.MovePath = this.MovePath.slice(1);
+        //     console.log('x: ' + this.MovePath[0].x + ' y: ' + this.MovePath[0].y);
+        //     let moveResults: number = this.creep.moveTo(this.MovePath[0].x, this.MovePath[0].y, opts);
+        //     return moveResults;
+        // }
         return this.creep.moveByPath(this.MovePath);
     }
 
