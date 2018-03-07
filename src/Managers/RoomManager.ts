@@ -15,10 +15,11 @@ export namespace RoomManager {
         return rooms[roomNames[0]];
     }
 
+
     export function getBestDeposit(creep: Screep): Structure {
         // Find all structures of type spawn or extension that isn't full
         // Sort by linear distance from this creep
-        let sortedStructures: any = getFirstRoom().find(FIND_MY_STRUCTURES, {
+        let sortedStructures: any = creep.creep.room.find(FIND_MY_STRUCTURES, {
             filter: function(structure) {
                 return ((structure.structureType == STRUCTURE_SPAWN
                     || structure.structureType == STRUCTURE_EXTENSION)

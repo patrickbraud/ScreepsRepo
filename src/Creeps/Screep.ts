@@ -1,4 +1,4 @@
-//import { SourceManager } from "Managers/SourceManager";
+import { CreepStatus } from "Enums/CreepEnums";
 
 export class Screep{
 
@@ -22,6 +22,16 @@ export class Screep{
     set MoveID(targetID: string) {
         this._moveID = targetID;
         this.creep.memory.MoveID = targetID;
+    }
+
+    // Status property
+    private _status: CreepStatus = null;
+    get Status() {
+        return this._status;
+    }
+    set Status(currentStatus: CreepStatus) {
+        this._status = currentStatus;
+        this.creep.memory.Status = currentStatus;
     }
 
     constructor(creep: Creep)
@@ -79,6 +89,7 @@ export class Screep{
 
     moveToTarget() {
 
+        // NOTE - maybe add ability to pass FindPathOpts to our move method
         // if (opts != undefined) {
         //     console.log('moving by coordinates');
         //     // remove the first element, since it's our current position

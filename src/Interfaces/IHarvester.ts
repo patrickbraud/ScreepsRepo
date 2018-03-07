@@ -3,7 +3,7 @@ export interface IHarvester{
     creep: Creep;
 
     TargetSourceID: string;
-    TargetDumpID: string;
+    TargetDepositID: string;
 
     work();
 

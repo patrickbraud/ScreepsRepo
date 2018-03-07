@@ -1,5 +1,5 @@
 import { RoomManager } from "./RoomManager";
-import { CreepManager } from "Example Code/components/creeps/creep-manager";
+import { CreepManager } from "./CreepManager";
 
 export namespace SourceManager {
 
@@ -9,8 +9,12 @@ export namespace SourceManager {
         sources = RoomManager.getFirstRoom().find(FIND_SOURCES);
     }
 
-    export function getBestSource(creep: Creep): Source {
-        let filteredSources: Source[] = SourceManager.sources.filter( src => creepsTargetingSource(src) < maxCreepCount(src));
+    export function  getBestSource(creep: Creep): Source {
+        // Get all of the sources in the same room as the creep
+        let sourcesInRoom = SourceManager.sources.filter( src => src.room.name == creep.room.name );
+        // Keep only the sources that have less creeps targeting them than the source has valid spaces to harvest from
+        let filteredSources: Source[] = sourcesInRoom.filter( src => creepsTargetingSource(src) < maxCreepCount(src) );
+        // Order the sources by linear distance to the creep
         let orderedSources: Source[] = filteredSources.sort(function (a, b) { return DistanceTo(creep, a.pos) - DistanceTo(creep, b.pos); });
 
         return orderedSources[0];
@@ -52,7 +56,7 @@ export namespace SourceManager {
     export function creepsTargetingSource(source: Source): number {
         let creepCount: number = 0;
 
-        for (let creepName in CreepManager.creepNames) {
+        for (let creepName in CreepManager.creeps) {
             creepCount = Game.creeps[creepName].memory.MoveID == source.id ? creepCount : ++creepCount;
         }
 
@@ -60,7 +64,7 @@ export namespace SourceManager {
     }
 
     function positionIsValid(pos: RoomPosition): boolean{
-        let lookResult = RoomManager.getFirstRoom().lookForAt(LOOK_TERRAIN, pos);
+        let lookResult = Game.rooms[pos.roomName].lookForAt(LOOK_TERRAIN, pos);
         //console.log('x: ' + pos.x + ' y: ' + pos.y + ' - ' + lookResult.toString() + ' - ' + (lookResult.toString() != 'wall'));
         return !(lookResult.toString() == 'wall');
     }
