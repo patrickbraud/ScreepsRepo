@@ -1,8 +1,11 @@
 import { CreepStatus } from "Enums/CreepEnums";
+import { RoomMgr } from "Mgrs/RoomMgr";
 
 export class Screep{
 
     creep: Creep;
+
+    roomMgr: RoomMgr;
 
     // MovePath property
     private _movePath: PathStep[];
@@ -24,6 +27,32 @@ export class Screep{
         this.creep.memory.MoveID = targetID;
     }
 
+    // PreviousPos Property
+    private _previousPos: RoomPosition;
+    get PreviousPos(): RoomPosition {
+        return this._previousPos;
+    }
+    set PreviousPos(pos: RoomPosition) {
+        if (pos == undefined) {
+            pos = this.creep.pos;
+        }
+        this._previousPos = pos;
+        this.creep.memory.PreviousPos = pos;
+    }
+
+    // PreviousMoveResult Property
+    private _previousMoveResult: number;
+    get PreviousMoveResult(): number {
+        return this._previousMoveResult;
+    }
+    set PreviousMoveResult(moveResult: number) {
+        if (moveResult == undefined) {
+            moveResult = OK;
+        }
+        this._previousMoveResult = moveResult;
+        this.creep.memory.PreviousMoveResult = moveResult;
+    }
+
     // Status property
     private _status: CreepStatus = null;
     get Status() {
@@ -34,13 +63,17 @@ export class Screep{
         this.creep.memory.Status = currentStatus;
     }
 
-    constructor(creep: Creep)
+    constructor(creep: Creep, roomManager: RoomMgr)
     {
         this.creep = creep;
+        this.roomMgr = roomManager
         this.MoveID = creep.memory.MoveID;
         if (creep.memory.MovePath != undefined) {
             this.MovePath = Room.deserializePath(creep.memory.MovePath as string);
         }
+        // console.log('PrevPos: ' + creep.memory.PreviousPos);
+        this.PreviousPos = creep.memory.PreviousPos;
+        this.PreviousMoveResult = creep.memory.PreviousMoveResult;
     }
 
     moveTo(target: any, pathColor?: string) {
@@ -48,9 +81,11 @@ export class Screep{
 
         // Check if we have a new target than the previous tick
         let newTarget: boolean = !(target.id == this.MoveID);
+        this.MoveID = target.id;
 
-        // If so, update the target ID and MovePath in memory
-        if (newTarget)
+        // If we got a new target, or our last move was considered
+        // a success but we are still in the same spot, get a new path
+        if (newTarget || this.checkIfStuck())
         {
             //console.log('New Target: ' + newTarget);
             this.updateTarget(target);
@@ -62,6 +97,11 @@ export class Screep{
             // Draw the path from our creep to it's target
             this.printPath(pathColor);
         }
+    }
+
+    updateTarget(target: any) {
+        console.log('Performing FIND Operation');
+        this.MovePath = this.creep.room.findPath(this.creep.pos, target.pos, { ignoreCreeps: true });
     }
 
     printPath(color: string) {
@@ -80,13 +120,6 @@ export class Screep{
         }
     }
 
-    updateTarget(target: any) {
-        this.MoveID = target.id;
-
-        console.log('Performing FIND Operation');
-        this.MovePath = this.creep.room.findPath(this.creep.pos, target.pos, { ignoreCreeps: true });
-    }
-
     moveToTarget() {
 
         // NOTE - maybe add ability to pass FindPathOpts to our move method
@@ -98,10 +131,27 @@ export class Screep{
         //     let moveResults: number = this.creep.moveTo(this.MovePath[0].x, this.MovePath[0].y, opts);
         //     return moveResults;
         // }
-        return this.creep.moveByPath(this.MovePath);
+        let moveResult: number = this.creep.moveByPath(this.MovePath);
+        this.PreviousMoveResult = moveResult;
+        this.PreviousPos = this.creep.pos;
+        return moveResult;
+    }
+
+    checkIfStuck(): boolean {
+        let stuck: boolean = false;
+        if ((this.checkSamePos(this.creep.memory.PreviousPos, this.creep.pos) && this.creep.memory.PreviousMoveResult == OK)) {
+            // We need a new path
+            stuck = true;
+            this.creep.say('stuck');
+        }
+        return stuck;
     }
 
     distanceTo(pos: RoomPosition) {
         return Math.sqrt(Math.pow(pos.x - this.creep.pos.x, 2) + Math.pow(pos.y - this.creep.pos.y, 2));
+    }
+
+    checkSamePos(pos1: RoomPosition, pos2: RoomPosition) {
+        return (pos1.x == pos2.x && pos1.y == pos2.y);
     }
 }

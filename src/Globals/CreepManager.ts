@@ -8,6 +8,13 @@ export namespace CreepManager {
 
     export function loadCreeps() {
         creeps = Game.creeps;
+
+        for (let name in Memory.creeps) {
+            if (!creeps[name]) {
+                delete Memory.creeps[name];
+                console.log('Cleared dead crep from memory: ' + name);
+            }
+        }
     }
 
     export function loop() {
@@ -16,10 +23,10 @@ export namespace CreepManager {
         let upgraders: Upgrader[] = [];
         for (let creepName in creeps) {
             if (creeps[creepName].memory.Role == 'harvester') {
-                harvesters.push(new Harvester(creeps[creepName]));
+                //harvesters.push(new Harvester(creeps[creepName]));
             }
             else if (creeps[creepName].memory.Role == 'upgrader') {
-                upgraders.push(new Upgrader(creeps[creepName]));
+                //upgraders.push(new Upgrader(creeps[creepName]));
             }
         }
 

@@ -1,6 +1,6 @@
 import { Screep } from "./Screep";
 import { CreepStatus } from "Enums/CreepEnums";
-import { SourceManager } from "Managers/SourceManager";
+import { RoomMgr } from "Mgrs/RoomMgr";
 
 export class Upgrader extends Screep{
 
@@ -9,6 +9,7 @@ export class Upgrader extends Screep{
         return this._targetSourceID;
     }
     set TargetSourceID(targetID: string) {
+        if (targetID == undefined) { targetID = "0"; }
         this._targetSourceID = targetID;
         this.creep.memory.TargetSourceID = targetID;
     }
@@ -16,8 +17,8 @@ export class Upgrader extends Screep{
     private _targetController: Controller;
     private _pathColor = "green";
 
-    constructor(creep: Creep) {
-        super(creep);
+    constructor(creep: Creep, roomManager: RoomMgr) {
+        super(creep, roomManager);
         this.TargetSourceID = creep.memory.TargetSourceID;
         this.Status = creep.memory.Status;
         this._targetController = this.creep.room.controller;
@@ -42,11 +43,11 @@ export class Upgrader extends Screep{
             //console.log('I should be harvesting');
             let targetSource: Source = null;
             if (this.TargetSourceID == "0") {
-                targetSource = SourceManager.getBestSource(this.creep);
+                targetSource = this.roomMgr.getBestSource(this.creep);
                 this.TargetSourceID = targetSource.id;
             }
             else {
-                targetSource = SourceManager.getSourceByID(this.TargetSourceID);
+                targetSource = this.roomMgr.getSourceByID(this.TargetSourceID);
             }
             target = targetSource;
         }

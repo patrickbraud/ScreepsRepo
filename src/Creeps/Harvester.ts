@@ -1,8 +1,8 @@
 import { CreepStatus } from "Enums/CreepEnums";
 import { IHarvester } from "Interfaces/IHarvester";
 import { Screep } from "./Screep";
-import { RoomManager } from "Managers/RoomManager";
-import { SourceManager } from "Managers/SourceManager";
+import { RoomManager } from "Globals/RoomManager";
+import { RoomMgr } from "Mgrs/RoomMgr";
 
 export class Harvester extends Screep implements IHarvester{
 
@@ -12,6 +12,7 @@ export class Harvester extends Screep implements IHarvester{
         return this._targetSourceID;
     }
     set TargetSourceID(targetID: string) {
+        if (targetID == undefined) { targetID == "0"; }
         this._targetSourceID = targetID;
         this.creep.memory.TargetSourceID = targetID;
     }
@@ -22,14 +23,15 @@ export class Harvester extends Screep implements IHarvester{
         return this._TargetDepositID;
     }
     set TargetDepositID(targetID: string) {
+        if (targetID == undefined) { targetID = "0"; }
         this._TargetDepositID = targetID;
         this.creep.memory.TargetDepositID = targetID;
     }
 
     private _pathColor = "yellow";
 
-    constructor(creep: Creep) {
-        super(creep);
+    constructor(creep: Creep, roomMgr: RoomMgr) {
+        super(creep, roomMgr);
         this.TargetSourceID = creep.memory.TargetSourceID;
         this.TargetDepositID = creep.memory.TargetDepositID;
         this.Status = creep.memory.Status;
@@ -56,11 +58,11 @@ export class Harvester extends Screep implements IHarvester{
             let targetSource: Source = null;
             if (this.TargetSourceID == "0") {
                 console.log('Getting new source');
-                targetSource = SourceManager.getBestSource(this.creep);
+                targetSource = this.roomMgr.getBestSource(this.creep);
                 this.TargetSourceID = targetSource.id;
             }
             else {
-                targetSource = SourceManager.getSourceByID(this.TargetSourceID);
+                targetSource = this.roomMgr.getSourceByID(this.TargetSourceID);
             }
             target = targetSource;
         }
