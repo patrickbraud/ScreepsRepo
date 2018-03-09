@@ -81,14 +81,14 @@ export class Screep{
 
         // Check if we have a new target than the previous tick
         let newTarget: boolean = !(target.id == this.MoveID);
-        this.MoveID = target.id;
+        let gotStuck: boolean = this.checkIfStuck()
 
         // If we got a new target, or our last move was considered
         // a success but we are still in the same spot, get a new path
-        if (newTarget || this.checkIfStuck())
+        if (newTarget || gotStuck)
         {
             //console.log('New Target: ' + newTarget);
-            this.updateTarget(target);
+            this.updateTarget(target, gotStuck);
         }
 
         this.moveToTarget();
@@ -99,9 +99,12 @@ export class Screep{
         }
     }
 
-    updateTarget(target: any) {
+    updateTarget(target: any, gotStuck: boolean) {
         console.log('Performing FIND Operation');
-        this.MovePath = this.creep.room.findPath(this.creep.pos, target.pos, { ignoreCreeps: true });
+        this.MoveID = target.id;
+
+        let ignoreAllCreeps = gotStuck ? false : true;
+        this.MovePath = this.creep.room.findPath(this.creep.pos, target.pos, { ignoreCreeps: ignoreAllCreeps });
     }
 
     printPath(color: string) {
