@@ -9,28 +9,6 @@ export namespace SourceManager {
         sources = RoomManager.getFirstRoom().find(FIND_SOURCES);
     }
 
-    // export function  getBestSource(creep: Creep): Source {
-    //     // Get all of the sources in the same room as the creep
-    //     let sourcesInRoom = SourceManager.sources.filter( src => src.room.name == creep.room.name );
-    //     // Keep only the sources that have less creeps targeting them than the source has valid spaces to harvest from
-    //     let filteredSources: Source[] = sourcesInRoom.filter( src => creepsTargetingSource(src) < maxCreepCount(src) );
-    //     // Order the sources by linear distance to the creep
-    //     let orderedSources: Source[] = filteredSources.sort(function (a, b) { return DistanceTo(creep, a.pos) - DistanceTo(creep, b.pos); });
-
-    //     return orderedSources[0];
-    // }
-
-    // export function getSourceByID(sourceID: string): Source {
-    //     let targetSource: Source = null;
-    //     sources.forEach(source => {
-    //         if (source.id == sourceID) {
-    //             targetSource = source;
-    //             return;
-    //         }
-    //     });
-    //     return targetSource;
-    // }
-
     export function maxCreepCount(source: Source): number {
         let validSpaceCount: number = 0;
          /*

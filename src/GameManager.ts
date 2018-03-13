@@ -1,7 +1,4 @@
-//import { CreepManager } from "Globals/CreepManager";
 import { SpawnManager } from "Globals/SpawnManager";
-import { SourceManager } from "Globals/SourceManager";
-import { RoomManager } from "Globals/RoomManager";
 import { GlobalValues } from "Globals/GlobalValues";
 import { Colony } from "Colony";
 
@@ -11,9 +8,7 @@ export namespace GameManager {
     export var colonies: Colony[];
 
     export function SetGlobals() {
-        RoomManager.loadRooms();
         SpawnManager.loadSpawns();
-        SourceManager.loadSources();
 
         console.log('Global Values Loaded');
     }
@@ -26,10 +21,6 @@ export namespace GameManager {
         colonies.forEach(colony => {
             colony.runColony();
         })
-
-        // CreepManager.loadCreeps();
-
-        // CreepManager.loop();
     }
 
     function loadColonies() {

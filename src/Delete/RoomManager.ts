@@ -22,7 +22,8 @@ export namespace RoomManager {
         let sortedStructures: any = creep.creep.room.find(FIND_MY_STRUCTURES, {
             filter: function(structure) {
                 return ((structure.structureType == STRUCTURE_SPAWN
-                    || structure.structureType == STRUCTURE_EXTENSION)
+                    || structure.structureType == STRUCTURE_EXTENSION
+                    || structure.structureType == STRUCTURE_CONTAINER)
                     && structure.energy < structure.energyCapacity);
             }
         }).sort((a: Structure, b: Structure): number => {return (creep.distanceTo(a.pos) - creep.distanceTo(b.pos))});

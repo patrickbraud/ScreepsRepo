@@ -1,7 +1,6 @@
 import { CreepStatus } from "Enums/CreepEnums";
 import { IHarvester } from "Interfaces/IHarvester";
 import { Screep } from "./Screep";
-import { RoomManager } from "Globals/RoomManager";
 import { RoomMgr } from "Mgrs/RoomMgr";
 
 export class Harvester extends Screep implements IHarvester{
@@ -42,7 +41,6 @@ export class Harvester extends Screep implements IHarvester{
         if(this.Status == CreepStatus.Harvesting && this.creep.carry.energy == this.creep.carryCapacity) {
             this.Status = CreepStatus.Depositing;
             this.creep.say('🔄 deposit');
-            this.TargetSourceID = "0";
         }
         // If w are Depositing and we are empty
 	    if(this.Status == CreepStatus.Depositing && this.creep.carry.energy == 0) {
@@ -58,11 +56,11 @@ export class Harvester extends Screep implements IHarvester{
             let targetSource: Source = null;
             if (this.TargetSourceID == "0") {
                 console.log('Getting new source');
-                targetSource = this.roomMgr.getBestSource(this.creep);
+                targetSource = this.roomMgr.sourceMgr.getBestSource(this);
                 this.TargetSourceID = targetSource.id;
             }
             else {
-                targetSource = this.roomMgr.getSourceByID(this.TargetSourceID);
+                targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
             }
             target = targetSource;
         }
@@ -71,7 +69,7 @@ export class Harvester extends Screep implements IHarvester{
             //console.log('I should be Depositing');
             let targetDeposit: any = null;
             if (this.TargetDepositID == "0") {
-                targetDeposit = RoomManager.getBestDeposit(this);
+                targetDeposit = this.roomMgr.getBestDeposit(this);
                 if (targetDeposit != null && targetDeposit != undefined) {
                     this.TargetDepositID =targetDeposit.id;
                 }
@@ -79,7 +77,7 @@ export class Harvester extends Screep implements IHarvester{
             else {
                 targetDeposit = Game.getObjectById(this.TargetDepositID);
                 if (targetDeposit.energy == targetDeposit.energyCapacity) {
-                    targetDeposit = RoomManager.getBestDeposit(this);
+                    targetDeposit = this.roomMgr.getBestDeposit(this);
                 }
             }
             target = targetDeposit;
@@ -89,7 +87,12 @@ export class Harvester extends Screep implements IHarvester{
             this.doAction(target);
         }
         else {
-            this.creep.say('zZz');
+            this.upgrade();
+            // if (Game.time % 2 == 0) {
+            //     this.creep.say('zZz');
+            // }
+            // this.creep.memory.MoveID = "0";
+            // this.creep.memory.MovePath = "";
         }
     }
 
@@ -117,6 +120,14 @@ export class Harvester extends Screep implements IHarvester{
         let transferResult = this.creep.transfer(target, RESOURCE_ENERGY);
         if (transferResult == ERR_NOT_IN_RANGE) {
             super.moveTo(target, this._pathColor);
+        }
+    }
+
+    upgrade() {
+        let targetController = this.roomMgr.baseRoomController;
+        let upgradeResult = this.creep.transfer(targetController, RESOURCE_ENERGY);
+        if (upgradeResult == ERR_NOT_IN_RANGE) {
+            super.moveTo(targetController, this._pathColor);
         }
     }
 }

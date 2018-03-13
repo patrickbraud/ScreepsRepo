@@ -1,5 +1,5 @@
 import { Harvester } from "Creeps/Harvester";
-import { SpawnManager } from "./SpawnManager";
+import { SpawnManager } from "../Globals/SpawnManager";
 import { Upgrader } from "Creeps/Upgrader";
 
 export namespace CreepManager {

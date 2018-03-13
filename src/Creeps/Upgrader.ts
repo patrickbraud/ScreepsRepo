@@ -43,11 +43,11 @@ export class Upgrader extends Screep{
             //console.log('I should be harvesting');
             let targetSource: Source = null;
             if (this.TargetSourceID == "0") {
-                targetSource = this.roomMgr.getBestSource(this.creep);
+                targetSource = this.roomMgr.sourceMgr.getBestSource(this);
                 this.TargetSourceID = targetSource.id;
             }
             else {
-                targetSource = this.roomMgr.getSourceByID(this.TargetSourceID);
+                targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
             }
             target = targetSource;
         }
