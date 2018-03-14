@@ -15,5 +15,6 @@ interface Creep {
 }
 
 interface StructureSpawn {
-    spawnHarvester(maxWork: number, maxCarry: number, maxMove: number, targetSource: Source): number;
+    spawnHarvester(targetSource: Source): number;
+    createWorkerBody(maxWork: number, maxCarry: number, maxMove: number, priority: string[], waitForMax: Boolean): string[];
 }

@@ -17,11 +17,10 @@ export class SourceMgr {
     spawnNeededHarvesters(): Boolean {
         let spawnRequested: Boolean = false;
         for (let source of this.sources) {
-            if (source.harvesterWorkCount < 5 && source.harvesterCount < this.maxCreepCount(source)) {
+            if (source.harvesterWorkCount < 5 && source.harvesterCount < SourceMgr.validPositions(source).length) {
                 spawnRequested = true;
                 // let neededWorkParts = 5 - source.harvesterWorkCount;
-                // this._roomManager.baseRoomSpawn.spawnHarvester(neededWorkParts, 1, 1, source);
-                this._roomManager.baseRoomSpawn.spawnHarvester(5, 1, 1, source);
+                this._roomManager.baseRoomSpawn.spawnHarvester(source);
                 break;
             }
         }
@@ -58,30 +57,32 @@ export class SourceMgr {
         return orderedSources[0];
     }
 
-    maxCreepCount(source: Source): number {
-        let validSpaceCount: number = 0;
+    static validPositions(centerObject: any ): RoomPosition[] {
+        let validPositions: RoomPosition[] = [];
          /*
             x * *
             * O *
             * * y
             Start at the x, end at the y
         */
-        let currentPos = new RoomPosition(source.pos.x - 1, source.pos.y - 1, source.pos.roomName);
+        let currentPos = new RoomPosition(centerObject.pos.x - 1, centerObject.pos.y - 1, centerObject.pos.roomName);
         for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
             for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
-                if (currentPos != source.pos) {
-                    let isValid = this.positionIsValid(currentPos);
-                    validSpaceCount = isValid ? ++validSpaceCount : validSpaceCount;
+                if (currentPos != centerObject.pos) {
+                    let isWall = SourceMgr.positionIsTerrainType(currentPos, 'wall');
+                    if (!isWall) {
+                        validPositions.push(new RoomPosition(currentPos.x, currentPos.y, currentPos.roomName));;
+                    }
                 }
             }
             currentPos.y -= 3;
         }
-        return validSpaceCount;
+        return validPositions;
     }
 
-    positionIsValid(pos: RoomPosition): boolean {
+    static positionIsTerrainType(pos: RoomPosition, terrain: string): boolean {
         let lookResult = Game.rooms[pos.roomName].lookForAt(LOOK_TERRAIN, pos);
         //console.log('x: ' + pos.x + ' y: ' + pos.y + ' - ' + lookResult.toString() + ' - ' + (lookResult.toString() != 'wall'));
-        return !(lookResult.toString() == 'wall');
+        return lookResult.toString() == terrain;
     }
 }

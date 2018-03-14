@@ -11,6 +11,9 @@ export class CreepMgr {
     public creeps: Creep[] = [];
     public creepNames: string[] = [];
 
+    public harvesters: Harvester[] = [];
+    public upgraders: Upgrader[] = [];
+
     // private _spawnUpgraderOpts = {
     //     Role: 'upgrader',
     //     TargetSourceID: 0,
@@ -29,22 +32,21 @@ export class CreepMgr {
     }
 
     runCreeps() {
-        let harvesters: Harvester[] = [];
-        let upgraders: Upgrader[] = [];
+
         for(let name in this.creepNames) {
             let creep = this.creeps[name];
             if (creep.memory.Role == 'harvester') {
-                harvesters.push(new Harvester(creep, this._roomMgr));
+                this.harvesters.push(new Harvester(creep, this._roomMgr));
             }
             else if (creep.memory.Role == 'upgrader') {
-                upgraders.push(new Upgrader(creep, this._roomMgr));
+                this.upgraders.push(new Upgrader(creep, this._roomMgr));
             }
         }
 
-        harvesters.forEach(harvester => {
+        this.harvesters.forEach(harvester => {
             harvester.work();
         });
-        upgraders.forEach(upgrader =>  {
+        this.upgraders.forEach(upgrader =>  {
             upgrader.work();
         })
     }

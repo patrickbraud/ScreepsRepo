@@ -1,6 +1,7 @@
 import { Colony } from "Colony";
 import { SourceMgr } from "./SourceMgr";
 import { Screep } from "Creeps/Screep";
+import { StashMgr } from "./StashMgr";
 
 // Manages the rooms for a colony
 export class RoomMgr {
@@ -12,19 +13,20 @@ export class RoomMgr {
     public baseRoomStructures: Structure[];
 
     public extensions: Extension[];
-    public containers: Container[];
+    public constructionSites: ConstructionSite[];
 
     public sourceMgr: SourceMgr;
+    public StashMgr: StashMgr;
 
     constructor(colony: Colony) {
         this.colony = colony;
         this.baseRoom = colony.spawn.room;
         this.baseRoomSpawn = colony.spawn;
         this.baseRoomController = colony.spawn.room.controller;
-        // Later, return sources in other rooms around our base as well
-        this.sourceMgr = new SourceMgr(this);
-
         this.loadStructures();
+
+        this.sourceMgr = new SourceMgr(this);
+        this.StashMgr = new StashMgr(this);
     }
 
     runRooms() {
@@ -32,41 +34,67 @@ export class RoomMgr {
         spawnRequested = this.sourceMgr.spawnNeededHarvesters();
 
         if (!spawnRequested) {
-            console.log('I should spawn something else');
+            console.log('Create containers in the best spot for source');
+            console.log('Spawn Haulers for containers that will build container construction sites');
+        }
+
+        if (this.baseRoomController.level >= 2) {
+            this.StashMgr.createNeededStashes();
         }
     }
 
     getBestDeposit(screep: Screep): Structure {
-        // Find all containers or structures of type spawn or extension that isn't full
-        // Sort by linear distance from this creep
-        let sortedStructures: any = screep.creep.room.find(FIND_STRUCTURES, {
-            filter: function(structure) {
-                return (((structure.structureType == STRUCTURE_SPAWN
-                    || structure.structureType == STRUCTURE_EXTENSION)
-                    && structure.energy < structure.energyCapacity)
-                    || (structure.structureType == STRUCTURE_CONTAINER
-                    && structure.store < structure.storeCapacity));
-            }
-        }).sort((a: Structure, b: Structure): number => {return (screep.distanceTo(a.pos) - screep.distanceTo(b.pos))});
-        return sortedStructures[0];
+
+        let targetStructures: Structure[] = [];
+
+        // Add our containers that need energy
+        let sortedContainers = this.StashMgr.containers.sort((a: Structure, b: Structure): number => {
+            return (screep.distanceTo(a.pos) - screep.distanceTo(b.pos))
+        });
+        sortedContainers = sortedContainers.filter(container => {
+            return container.store[RESOURCE_ENERGY] < container.storeCapacity;
+        });
+        targetStructures = targetStructures.concat(sortedContainers);
+
+        // Add our extensions that need energy
+        let sortedExtensions = this.extensions.sort((a: Structure, b: Structure): number => {
+            return (screep.distanceTo(a.pos) - screep.distanceTo(b.pos))
+        });
+        sortedExtensions = sortedExtensions.filter(extension => {
+            return extension.energy < extension.energyCapacity;
+        });
+        targetStructures = targetStructures.concat(sortedExtensions);
+
+        // Add the spawn to the list if it needs energy
+        if (this.baseRoomSpawn.energy < this.baseRoomSpawn.energyCapacity) {
+            targetStructures.push(this.baseRoomSpawn);
+        }
+
+        return targetStructures[0];
     }
 
     loadStructures() {
-        // Get all structures and set the variables for reach structure type
+        // Get all structures
         this.baseRoomStructures = this.baseRoom.find(FIND_STRUCTURES);
+        // Get all construction sites
+        this.constructionSites = this.baseRoom.find(FIND_CONSTRUCTION_SITES);
         // Get extensions
-        this.extensions = this.getStructureOfType(STRUCTURE_EXTENSION) as Extension[];
-        // Gt containers
-        this.containers = this.getStructureOfType(STRUCTURE_CONTAINER) as Container[];
+        this.extensions = this.getStructuresOfType(STRUCTURE_EXTENSION) as Extension[];
     }
 
     distanceTo(creep: Creep, pos: RoomPosition): number {
         return Math.sqrt(Math.pow(pos.x - creep.pos.x, 2) + Math.pow(pos.y - creep.pos.y, 2));
     }
 
-    getStructureOfType(type: string): Structure[] {
+    getStructuresOfType(type: string): Structure[] {
         return this.baseRoomStructures.filter(struct => {
-            struct.structureType == type;
+            return struct.structureType == type;
+        });
+    }
+
+    getConstructionSitesOfType(type: string): ConstructionSite[] {
+        return this.constructionSites.filter(site => {
+            return site.structureType == type;
         })
     }
 }

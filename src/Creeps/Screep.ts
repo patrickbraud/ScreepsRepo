@@ -100,7 +100,7 @@ export class Screep{
     }
 
     updateTarget(target: any, gotStuck: boolean) {
-        console.log('Performing FIND Operation');
+        // console.log('Performing FIND Operation');
         this.MoveID = target.id;
 
         let ignoreAllCreeps = gotStuck ? false : true;
