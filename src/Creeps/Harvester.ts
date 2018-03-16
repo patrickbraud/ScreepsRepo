@@ -55,7 +55,6 @@ export class Harvester extends Screep implements IHarvester{
             //console.log('I should be harvesting');
             let targetSource: Source = null;
             if (this.TargetSourceID == "0") {
-                console.log('Getting new source');
                 targetSource = this.roomMgr.sourceMgr.getBestSource(this);
                 this.TargetSourceID = targetSource.id;
             }

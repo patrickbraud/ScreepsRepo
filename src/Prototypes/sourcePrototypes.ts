@@ -12,7 +12,7 @@ export function sourcePrototypes() {
             let currentPos = new RoomPosition(this.pos.x - 1, this.pos.y - 1, this.pos.roomName);
             for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
                 for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
-                    if (currentPos != this.pos) {
+                    if (!currentPos.isEqualTo(this.pos)) {
                         let isValid = this.room.positionIsValid(currentPos);
                         validSpaceCount = isValid ? ++validSpaceCount : validSpaceCount;
                     }

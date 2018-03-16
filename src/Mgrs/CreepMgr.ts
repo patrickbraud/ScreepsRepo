@@ -1,6 +1,7 @@
 import { Harvester } from "Creeps/Harvester";
 import { Upgrader } from "Creeps/Upgrader";
 import { RoomMgr } from "./RoomMgr";
+import { Transporter } from "Creeps/Transporter";
 
 export class CreepMgr {
 
@@ -13,6 +14,7 @@ export class CreepMgr {
 
     public harvesters: Harvester[] = [];
     public upgraders: Upgrader[] = [];
+    public transporters: Transporter[] = [];
 
     // private _spawnUpgraderOpts = {
     //     Role: 'upgrader',
@@ -33,21 +35,14 @@ export class CreepMgr {
 
     runCreeps() {
 
-        for(let name in this.creepNames) {
-            let creep = this.creeps[name];
-            if (creep.memory.Role == 'harvester') {
-                this.harvesters.push(new Harvester(creep, this._roomMgr));
-            }
-            else if (creep.memory.Role == 'upgrader') {
-                this.upgraders.push(new Upgrader(creep, this._roomMgr));
-            }
-        }
-
         this.harvesters.forEach(harvester => {
             harvester.work();
         });
         this.upgraders.forEach(upgrader =>  {
             upgrader.work();
+        })
+        this.transporters.forEach(transporter => {
+            transporter.work();
         })
     }
 
@@ -59,6 +54,19 @@ export class CreepMgr {
                     this.creepNames.push(creepName);
                     this.creeps.push(creep);
                 }
+            }
+        }
+
+        for(let name in this.creepNames) {
+            let creep = this.creeps[name];
+            if (creep.memory.Role == 'harvester') {
+                this.harvesters.push(new Harvester(creep, this._roomMgr));
+            }
+            else if (creep.memory.Role == 'transporter') {
+                this.transporters.push(new Transporter(creep, this._roomMgr));
+            }
+            else if (creep.memory.Role == 'upgrader') {
+                this.upgraders.push(new Upgrader(creep, this._roomMgr));
             }
         }
     }

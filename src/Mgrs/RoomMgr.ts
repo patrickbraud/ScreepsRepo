@@ -12,6 +12,11 @@ export class RoomMgr {
     public baseRoomController: Controller;
     public baseRoomStructures: Structure[];
 
+    public creeps: Creep[];
+    public creepNames: string[];
+    public transporters: Creep[];
+    public harvesters: Creep[];
+
     public extensions: Extension[];
     public constructionSites: ConstructionSite[];
 
@@ -23,6 +28,7 @@ export class RoomMgr {
         this.baseRoom = colony.spawn.room;
         this.baseRoomSpawn = colony.spawn;
         this.baseRoomController = colony.spawn.room.controller;
+        this.loadCreeps();
         this.loadStructures();
 
         this.sourceMgr = new SourceMgr(this);
@@ -30,17 +36,9 @@ export class RoomMgr {
     }
 
     runRooms() {
-        let spawnRequested: Boolean = false;
-        spawnRequested = this.sourceMgr.spawnNeededHarvesters();
-
-        if (!spawnRequested) {
-            console.log('Create containers in the best spot for source');
-            console.log('Spawn Haulers for containers that will build container construction sites');
-        }
-
-        if (this.baseRoomController.level >= 2) {
-            this.StashMgr.createNeededStashes();
-        }
+        this.StashMgr.createNeededStashes();
+        this.StashMgr.spawnNeededTransporters();
+        this.sourceMgr.spawnNeededHarvesters();
     }
 
     getBestDeposit(screep: Screep): Structure {
@@ -80,6 +78,35 @@ export class RoomMgr {
         this.constructionSites = this.baseRoom.find(FIND_CONSTRUCTION_SITES);
         // Get extensions
         this.extensions = this.getStructuresOfType(STRUCTURE_EXTENSION) as Extension[];
+    }
+
+    loadCreeps() {
+        this.creepNames = [];
+        this.creeps = [];
+        this.transporters = [];
+        this.harvesters = [];
+
+        for (let creepName in Game.creeps) {
+            if (!Game.creeps[creepName]) {
+                delete Memory.creeps[name];
+                console.log('Clearing non-existing creep memory:', creepName);
+            }
+            let creep = Game.creeps[creepName];
+            // Get all creeps in our colony AND our room ***Expansion point to cover multiple rooms
+            if (creep.memory.ColonyID == this.colony.ColonyID
+                && creep.room.name == this.baseRoom.name) {
+                this.creepNames.push(creepName);
+                this.creeps.push(creep);
+
+                let role = creep.memory.Role;
+                if (role == 'transporter') {
+                    this.transporters.push(creep);
+                }
+                else if (role == 'harvester') {
+                    this.harvesters.push(creep);
+                }
+            }
+        }
     }
 
     distanceTo(creep: Creep, pos: RoomPosition): number {
