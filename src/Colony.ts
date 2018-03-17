@@ -40,32 +40,4 @@ export class Colony {
         this.creepManager.runCreeps();
 
     }
-
-    // private levelOneColony() {
-    //     let harvesters: Harvester[] = [];
-    //     let upgraders: Upgrader[] = [];
-    //     for(let name in this.creepManager.creepNames) {
-    //         let creep = this.creepManager.creeps[name];
-    //         if (creep.memory.Role == 'harvester') {
-    //             harvesters.push(new Harvester(creep, this._roomManager));
-    //         }
-    //         else if (creep.memory.Role == 'upgrader') {
-    //             upgraders.push(new Upgrader(creep, this._roomManager));
-    //         }
-    //     }
-
-    //     if (harvesters.length < 1) {
-    //         this.creepManager.spawnCreep('harvester', [WORK, CARRY, MOVE]);
-    //     }
-    //     else if (upgraders.length < 2) {
-    //         this.creepManager.spawnCreep('upgrader', [WORK, CARRY, MOVE]);
-    //     }
-
-    //     harvesters.forEach(harvester => {
-    //         harvester.work();
-    //     });
-    //     upgraders.forEach(upgrader =>  {
-    //         upgrader.work();
-    //     })
-    // }
 }

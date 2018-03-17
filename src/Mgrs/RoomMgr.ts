@@ -124,4 +124,38 @@ export class RoomMgr {
             return site.structureType == type;
         })
     }
+
+    static validPositions(centerObject: any, invalidTerrain: string[]): RoomPosition[] {
+        let validPositions: RoomPosition[] = [];
+         /*
+            x * *
+            * O *
+            * * y
+            Start at the x, end at the y
+        */
+        let currentPos = new RoomPosition(centerObject.pos.x - 1, centerObject.pos.y - 1, centerObject.pos.roomName);
+        for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
+            for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
+                if (currentPos != centerObject.pos) {
+
+                    let invalid = false;
+                    for (let terrain in invalidTerrain) {
+                        invalid = RoomMgr.positionIsTerrainType(currentPos, terrain);
+                        if (invalid) { break; }
+                    }
+                    if (!invalid) {
+                        validPositions.push(new RoomPosition(currentPos.x, currentPos.y, currentPos.roomName));;
+                    }
+                }
+            }
+            currentPos.y -= 3;
+        }
+        return validPositions;
+    }
+
+    static positionIsTerrainType(pos: RoomPosition, terrain: string): boolean {
+        let lookResult = Game.rooms[pos.roomName].lookForAt(LOOK_TERRAIN, pos);
+        //console.log('x: ' + pos.x + ' y: ' + pos.y + ' - ' + lookResult.toString() + ' - ' + (lookResult.toString() != 'wall'));
+        return lookResult.toString() == terrain;
+    }
 }

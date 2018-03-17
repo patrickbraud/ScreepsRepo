@@ -36,12 +36,18 @@ export class Transporter extends Screep{
             this.creep.say('📀 Collect');
         }
 
-        let conSiteFound = this.roomMgr.StashMgr.containerConstructionSites.find(site => {
-            return site.id == this.TargetContainerID;
-        });
-        let containerFound = this.roomMgr.StashMgr.containers.find(container => {
-            return container.id == this.TargetContainerID;
-        });
+        let targetConSite: ConstructionSite = this.roomMgr.StashMgr.getContainerConSiteByID(this.TargetContainerID);
+        let targetContainer: Container = this.roomMgr.StashMgr.getContainerByID(this.TargetContainerID);
+        let connectedSource: Source;
+        if (targetConSite != undefined) {
+            connectedSource = this.roomMgr.StashMgr.getSourceForContainerConSite(targetConSite);
+        }
+        else if (targetContainer != undefined) {
+            connectedSource = this.roomMgr.StashMgr.getSourceForContainer(targetContainer);
+        }
+
+        this.checkIfBlockingHarvesters(connectedSource);
+
 
         // When transporting you want to DUMP energy, and you can do 2 things
         // - Transport energy to extensions/spawn
@@ -50,8 +56,8 @@ export class Transporter extends Screep{
         if (this.Status == CreepStatus.Transporting)
         {
             // if our TargetContainerID is actually a container, then we don't want don't want to build
-            // deposit into an extension/spawn
-            if (containerFound != undefined) {
+            // deposit into an extension/spawn/controller storage
+            if (targetContainer != undefined) {
                 let structuresNeedEnergy = this.roomMgr.extensions.filter(ext => {
                     return ext.energy < ext.energyCapacity
                 })
@@ -66,9 +72,9 @@ export class Transporter extends Screep{
             }
             // if our TargetContainerID is a construction site for a container,
             // Then build the construction site
-            else if (conSiteFound != undefined)
+            else if (targetConSite != undefined)
             {
-                this.buildContainer(conSiteFound);
+                this.buildContainer(targetConSite);
                 return;
             }
 
@@ -80,54 +86,56 @@ export class Transporter extends Screep{
         // - collect energy from the harvesters/extensions to build the container
         // * Fallback zZz
         else if (this.Status == CreepStatus.Collecting) {
-
-            let collectionTarget: Creep | Extension | Spawn | Container;
             // if our TargetContainerID is a construction site for a container,
-            // Then collect from the harvesters/extensions in that order
-            if (conSiteFound != undefined)
+            // Then collect from the harvesters located at the conSite we want to build
+            if (targetConSite != undefined)
             {
-                // Get all extensions
-                let validStructures: (Extension | Spawn)[] = this.roomMgr.extensions;
-                //validStructures.push(this.roomMgr.baseRoomSpawn);
-                // Keep only the ones that have energy
-                let structuresWithEnergy: (Extension | Spawn)[] = validStructures.filter(struct => {
-                    return struct.energy > 0;
-                })
 
-                // TESTTTTT REMOV THISSSS
-                structuresWithEnergy = [];
-                if (structuresWithEnergy.length > 0) {
-                    collectionTarget = structuresWithEnergy.pop();
-                    this.collectFromStructure(collectionTarget);
+                // if there aren't any structures w/ energy, take energy from the harvesters directly
+                let creepsHarvesting = this.roomMgr.harvesters.filter(creep => {
+                    return creep.memory.TargetSourceID == connectedSource.id
+                            && creep.memory.Status == CreepStatus.Harvesting
+                            && creep.carry.energy > 0;
+                });
+
+                if (creepsHarvesting.length > 0) {
+                    let collectionTarget = creepsHarvesting[0];
+                    this.collectFromHarvester(collectionTarget);
                     return;
                 }
                 else {
-                    // if there aren't any structures w/ energy, take energy from the harvesters directly
-                    let creepsHarvesting = this.roomMgr.harvesters.filter(creep => {
-                        return creep.memory.Status == CreepStatus.Harvesting
-                                && creep.carry.energy > 0;
-                    });
-                    if (creepsHarvesting.length > 0) {
-                        collectionTarget = creepsHarvesting[0];
-                        this.collectFromHarvester(collectionTarget);
-                        return;
-                    }
-                    else{
-                        if (Game.time % 2 == 0) {
-                            this.creep.say('zZz')
-                        }
+                    // // Get all extensions
+                    // let validStructures: (Extension | Spawn)[] = this.roomMgr.extensions;
+                    // //validStructures.push(this.roomMgr.baseRoomSpawn);
+                    // // Keep only the ones that have energy
+                    // let structuresWithEnergy: (Extension | Spawn)[] = validStructures.filter(struct => {
+                    //     return struct.energy > 0;
+                    // })
+                    // if (structuresWithEnergy.length > 0) {
+                    //     let collectionTarget = structuresWithEnergy.pop();
+                    //     this.collectFromStructure(collectionTarget);
+                    //     return;
+                    // }
+                    if (Game.time % 2 == 0) {
+                        this.creep.say('📀zZz');
                     }
                 }
             }
             // if our TargetContainerID is a container, then collect from it
-            else if (containerFound != undefined) {
-                collectionTarget = this.roomMgr.StashMgr.containers.find(container => {
-                    return container.id == this.TargetContainerID;
-                });
-                this.collectFromStructure(collectionTarget)
-            }
             else {
-                console.log('TargetContainerID is fucked');
+                this.collectFromStructure(targetContainer)
+            }
+        }
+    }
+
+    checkIfBlockingHarvesters(source: Source) {
+        let validSourcePositions = RoomMgr.validPositions(source, ['wall']);
+        for (let pos of validSourcePositions) {
+            if (pos.isEqualTo(this.creep.pos)) {
+                this.creep.say('Blocking');
+                // Move in a random direction until we aren't blocking a harvester
+                this.creep.move(Math.random() * Math.floor(9 - 1) + 1);
+                return;
             }
         }
     }

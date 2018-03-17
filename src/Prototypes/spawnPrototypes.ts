@@ -17,11 +17,12 @@ export function spawnPrototypes() {
         for (let baseMove = 0; baseMove < 1 && baseMove < maxMove; baseMove++) {
             body.push(MOVE);
         }
-        let moveCount = body.length - carryCount;
+        let moveCount = body.length - carryCount - workCount;
 
         let energyRequired = (BODYPART_COST.work * moveCount)
                              + (BODYPART_COST.carry * carryCount)
                              + (BODYPART_COST.move * moveCount);
+
         let energyAvailable = this.room.energyAvailable;
 
         for (let index = 0; index < priority.length; index++) {
@@ -121,7 +122,6 @@ export function spawnPrototypes() {
 
     StructureSpawn.prototype.spawnHarvester = function(targetSource: Source): number {
 
-        // let body: string[] = this.createWorkerBody(maxWork, maxCarry, maxMove, [WORK, CARRY, MOVE]);
         let body: string[] = this.createWorkerBody(5, 1, 1, [WORK, CARRY, MOVE], false);
         console.log('Harvester Body generated: ' + body.toString());
 
@@ -152,7 +152,7 @@ export function spawnPrototypes() {
         let body: string[] = [];
         if (containerBuilder) {
             body = this.createWorkerBody(1, 2, 2, [CARRY, MOVE, WORK], false);
-            console.log('ContainerTransport Body generated: ' + body.toString());
+            console.log('BuilderTransporter Body generated: ' + body.toString());
         }
         else {
             body = this.createWorkerBody(0, 3, 3, [MOVE, CARRY], true)

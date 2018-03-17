@@ -17,7 +17,7 @@ export class SourceMgr {
     spawnNeededHarvesters(): Boolean {
         let spawnRequested: Boolean = false;
         for (let source of this.sources) {
-            if (source.harvesterWorkCount < 5 && source.harvesterCount < SourceMgr.validPositions(source).length) {
+            if (source.harvesterWorkCount < 5 && source.harvesterCount < RoomMgr.validPositions(source, ['wall']).length) {
                 spawnRequested = true;
                 // let neededWorkParts = 5 - source.harvesterWorkCount;
                 this._roomManager.baseRoomSpawn.spawnHarvester(source);
@@ -57,28 +57,7 @@ export class SourceMgr {
         return orderedSources[0];
     }
 
-    static validPositions(centerObject: any ): RoomPosition[] {
-        let validPositions: RoomPosition[] = [];
-         /*
-            x * *
-            * O *
-            * * y
-            Start at the x, end at the y
-        */
-        let currentPos = new RoomPosition(centerObject.pos.x - 1, centerObject.pos.y - 1, centerObject.pos.roomName);
-        for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
-            for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
-                if (currentPos != centerObject.pos) {
-                    let isWall = SourceMgr.positionIsTerrainType(currentPos, 'wall');
-                    if (!isWall) {
-                        validPositions.push(new RoomPosition(currentPos.x, currentPos.y, currentPos.roomName));;
-                    }
-                }
-            }
-            currentPos.y -= 3;
-        }
-        return validPositions;
-    }
+
 
     static positionIsTerrainType(pos: RoomPosition, terrain: string): boolean {
         let lookResult = Game.rooms[pos.roomName].lookForAt(LOOK_TERRAIN, pos);

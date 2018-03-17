@@ -143,11 +143,11 @@ export class Screep{
     checkIfStuck(): boolean {
         let stuck: boolean = false;
         if ((this.checkSamePos(this.creep.memory.PreviousPos, this.creep.pos)
-            && this.creep.memory.PreviousMoveResult == OK)
+            && (this.creep.memory.PreviousMoveResult == OK
+                || this.creep.memory.PreviousMoveResult == ERR_NOT_FOUND))
             && !(this.creep.fatigue > 0)) {
             // We need a new path
             stuck = true;
-            //this.creep.say('stuck');
         }
         return stuck;
     }

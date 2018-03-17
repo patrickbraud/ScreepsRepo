@@ -1,63 +1,94 @@
 import { RoomMgr } from "./RoomMgr";
-import { SourceMgr } from "./SourceMgr";
 
 export class StashMgr {
 
     containers: Container[];
     containerConstructionSites: ConstructionSite[];
 
-    sourcesWithContainers: Source[];
-
-    //storages: Storage[];
+    sourceContainers: {container: Container, source: Source}[];
+    sourceConstructionSites: {conSite: ConstructionSite, source}[];
 
     private _roomMgr: RoomMgr;
 
     constructor(roomMgr: RoomMgr) {
         this._roomMgr = roomMgr;
-        this.sourcesWithContainers = [];
-
+        this.sourceContainers = [];
+        this.sourceConstructionSites = [];
         this._loadStashes();
     }
 
     private _loadStashes() {
         this.containers = this._roomMgr.getStructuresOfType(STRUCTURE_CONTAINER) as Container[];
         this.containerConstructionSites = this._roomMgr.getConstructionSitesOfType(STRUCTURE_CONTAINER);
+
+        if (this.containers.length > 0 || this.containerConstructionSites.length > 0) {
+            for (let source of this._roomMgr.sourceMgr.sources) {
+
+                let containerFound: Container;
+                let containerConstructionFound: ConstructionSite;
+                let validPositions = RoomMgr.validPositions(source, ['wall']);
+
+                if (validPositions.length > 0) {
+                    for (let pos of validPositions) {
+
+                        if (this.containers.length > 0) {
+                            // Check if this source has a container around it
+                            containerFound = this.containers.find(container => {
+                                return container.pos.isEqualTo(pos);
+                            });
+                            if (containerFound) {
+                                let sourceContainer = {
+                                    container: containerFound,
+                                    source: source
+                                }
+                                this.sourceContainers.push(sourceContainer)
+                                break;
+                            }
+                        }
+
+                        if (this.containerConstructionSites.length > 0) {
+                            // Check if this source has any container construction sites around it
+                            containerConstructionFound = this.containerConstructionSites.find(consite => {
+                                return consite.pos.isEqualTo(pos);
+                            });
+                            if (containerConstructionFound) {
+                                let sourceConSite = {
+                                    conSite: containerConstructionFound,
+                                    source: source
+                                }
+                                this.sourceConstructionSites.push(sourceConSite);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     createNeededStashes() {
         if (this._roomMgr.baseRoomController.level >= 2) {
-            // Create a single container for each source
+
+            // Check our list of all sources compared against our list of sources with containers
+            // if the we find a source that isn't in our sourceContainer list, it needs a container
             for (let source of this._roomMgr.sourceMgr.sources) {
 
-                let containerFound: Boolean = false;
-                let containerConstructionFound: Boolean = false;
-                let validPositions = SourceMgr.validPositions(source);
+                let hasContainer = this.sourceContainers.find(sourceContainer => {
+                    return sourceContainer.source.id == source.id;
+                });
 
-                if (validPositions.length > 0) {
-                    for (let pos of validPositions) {
-                        // Check if this source has a container around it
-                        containerFound = this.containers.filter(container => {
-                            return container.pos.isEqualTo(pos);
-                        }).length > 0;
+                if (hasContainer == undefined) {
 
-                        // Check if this source has any container construction sites around it
-                        containerConstructionFound = this.containerConstructionSites.filter(site => {
-                            return site.pos.isEqualTo(pos);
-                        }).length > 0;
+                    let hasConSite = this.sourceConstructionSites.find(sourceConSite => {
+                        return sourceConSite.source.id == source.id;
+                    });
 
-
-                        if (containerFound || containerConstructionFound) {
-                            if (containerFound) {
-                                this.sourcesWithContainers.push(source);
-                            }
-                            break;
-                        }
-                    }
-                    if (!containerFound && !containerConstructionFound) {
-                        let conSitePos = this._getBestContainerPos(validPositions);
+                    if (hasConSite == undefined) {
+                        let conSitePos = this._getBestContainerPos(RoomMgr.validPositions(source, ['wall']));
                         source.room.createConstructionSite(conSitePos, STRUCTURE_CONTAINER);
                     }
                 }
+
             }
         }
     }
@@ -122,11 +153,77 @@ export class StashMgr {
         return spawnRequested;
     }
 
+    // Get Container Methods
+    // ---------------------
+    getContainerByID(containerID: string): Container {
+        for (let sourceContainer of this.sourceContainers) {
+            if (sourceContainer.container.id == containerID) {
+                return sourceContainer.container;
+            }
+        }
+
+        return undefined;
+    }
+
+    getContainerForSource(source: Source): Container {
+        for (let sourceContainer of this.sourceContainers) {
+            if (sourceContainer.source.id == source.id) {
+                return sourceContainer.container;
+            }
+        }
+
+        return undefined;
+    }
+
+    // Get Construction Site methods
+    // -----------------------------
+    getContainerConSiteByID(conSiteID: string): ConstructionSite {
+        for (let sourceConSite of this.sourceConstructionSites) {
+            if (sourceConSite.conSite.id == conSiteID) {
+                return sourceConSite.conSite;
+            }
+        }
+
+        return undefined;
+    }
+
+    getContainerConSiteForSource(source: Source): ConstructionSite {
+        for (let sourceConSite of this.sourceConstructionSites) {
+            if (sourceConSite.source.id == source.id) {
+                return sourceConSite.conSite;
+            }
+        }
+
+        return undefined;
+    }
+
+    // Get Source Methods
+    // ------------------
+    getSourceForContainer(container: Container): Source {
+        for (let sourceContainer of this.sourceContainers) {
+            if (sourceContainer.container.id == container.id) {
+                return sourceContainer.source;
+            }
+        }
+
+        return undefined;
+    }
+
+    getSourceForContainerConSite(conSite: ConstructionSite) {
+        for (let sourceConSite of this.sourceConstructionSites) {
+            if (sourceConSite.conSite.id == conSite.id) {
+                return sourceConSite.source;
+            }
+        }
+
+        return undefined;
+    }
+
     private _getBestContainerPos(validPositions: RoomPosition[]) {
         let bestPos = null;
         let maxCount = 0;
         for(let pos of validPositions) {
-            let maxValidPositions = this.validPositionCount(pos);
+            let maxValidPositions = this.validPositionCount(pos, 'wall');
             if (bestPos == null || maxValidPositions > maxCount) {
                 bestPos = pos;
                 maxCount = maxValidPositions;
@@ -135,7 +232,7 @@ export class StashMgr {
         return bestPos;
     }
 
-    private validPositionCount(centerPos: RoomPosition) {
+    private validPositionCount(centerPos: RoomPosition, invalidTerrain: string) {
         let validPositionCount: number = 0;
          /*
             x * *
@@ -147,7 +244,7 @@ export class StashMgr {
         for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
             for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
                 if (!currentPos.isEqualTo(centerPos)) {
-                    let isWall = SourceMgr.positionIsTerrainType(currentPos, 'wall');
+                    let isWall = RoomMgr.positionIsTerrainType(currentPos, invalidTerrain);
                     if (!isWall) {
                         validPositionCount++
                     }
