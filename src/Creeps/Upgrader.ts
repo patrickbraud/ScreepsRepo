@@ -4,83 +4,88 @@ import { RoomMgr } from "Mgrs/RoomMgr";
 
 export class Upgrader extends Screep{
 
-    private _targetSourceID: string;
-    get TargetSourceID(): string {
-        return this._targetSourceID;
-    }
-    set TargetSourceID(targetID: string) {
-        if (targetID == undefined) { targetID = "0"; }
-        this._targetSourceID = targetID;
-        this.creep.memory.TargetSourceID = targetID;
-    }
-
     private _targetController: Controller;
-    private _pathColor = "green";
 
     constructor(creep: Creep, roomManager: RoomMgr) {
         super(creep, roomManager);
-        this.TargetSourceID = creep.memory.TargetSourceID;
+        //this.TargetSourceID = creep.memory.TargetSourceID;
         this.Status = creep.memory.Status;
         this._targetController = this.creep.room.controller;
+        super.pathColor = "green";
     }
 
     work() {
-        // If we are harvesting and we are full
-        if(this.Status == CreepStatus.Harvesting && this.creep.carry.energy == this.creep.carryCapacity) {
+        // If we are restocking and we are full
+        if (this.Status == CreepStatus.Collecting && this.creep.carry.energy == this.creep.carryCapacity) {
             this.Status = CreepStatus.Upgrading;
-            this.creep.say('⚙️ upgrade');
-            this.TargetSourceID = "0";
+            this.creep.say('⚙️upgrade');
         }
         // If we are Upgrading and we are empty
-	    if(this.Status == CreepStatus.Upgrading && this.creep.carry.energy == 0) {
-	        this.Status = CreepStatus.Harvesting;
-            this.creep.say('⚒️ harvest');
+	    if (this.Status == CreepStatus.Upgrading && this.creep.carry.energy == 0) {
+	        this.Status = CreepStatus.Collecting;
+            this.creep.say('⚙️Collect');
         }
 
-        let target: Source | Controller = null;
-        if (this.Status == CreepStatus.Harvesting)
-        {
-            //console.log('I should be harvesting');
-            let targetSource: Source = null;
-            if (this.TargetSourceID == "0") {
-                targetSource = this.roomMgr.sourceMgr.getBestSource(this);
-                this.TargetSourceID = targetSource.id;
+
+        // * Upgrade room controller
+        if (this.Status == CreepStatus.Upgrading) {
+            this.upgradeController();
+        }
+        // * if our controller DOES have a container
+        //   - collect from container if it has energy
+        // * Check for dropped energy around the spawn drop position
+        // * if our spawn DOES have a container
+        //   - collect from container if it has energy
+        // * move to spawn area and wait -- TEST: try just waiting
+        else if (this.Status == CreepStatus.Collecting) {
+
+            // * if our controller DOES have a container
+            let controllerContainer = this.roomMgr.StashMgr.controllerContainer;
+            if (controllerContainer != undefined) {
+                //   - collect from container
+                this.collectFromContainer(controllerContainer);
             }
-            else {
-                targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
+
+            // * Check for dropped energy around the spawn drop position
+            let dropPosition: RoomPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
+            let energyFound = this.checkForDroppedEnergy(RoomMgr.validPositions(dropPosition, ['wall']));
+            if (energyFound != undefined) {
+                this.pickUpEnergy(energyFound);
+                return;
             }
-            target = targetSource;
-        }
-        else if (this.Status == CreepStatus.Upgrading) {
-            target = this._targetController;
-        }
 
-        this.doAction(target);
-    }
+            // * if our spawn DOES have a container
+            let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
+            if (spawnContainer != undefined) {
+                //   - collect from container
+                this.collectFromContainer(spawnContainer);
+            }
 
-    doAction(target: Source | Controller) {
-
-        if (this.Status == CreepStatus.Harvesting) {
-            this.harvest(target as Source);
-        }
-        else if (this.Status == CreepStatus.Upgrading) {
-            this.upgrade();
+            // * move to spawn area and wait -- TEST: try just waiting
+            if (Game.time % 3 == 0) {
+                this.creep.say('⚙️zZz');
+            }
         }
     }
 
-    // Get to work!
-    harvest(source: Source) {
-
-        let harvestResult = this.creep.harvest(source);
-        if (harvestResult == ERR_NOT_IN_RANGE) {
-            super.moveTo(source, this._pathColor);
+    collectFromContainer(container: Container) {
+        let withDrawResult = this.creep.withdraw(container, RESOURCE_ENERGY);
+        if (withDrawResult == ERR_NOT_IN_RANGE) {
+            super.moveTo(container), this.pathColor;
         }
     }
 
-    upgrade() {
+    collectFromCreep(creep: Creep) {
+        let transferResult = creep.transfer(this.creep, RESOURCE_ENERGY);
+        if (transferResult == ERR_NOT_IN_RANGE) {
+            super.moveTo(creep);
+        }
+    }
+
+    upgradeController() {
         let upgradeResult = this.creep.transfer(this._targetController, RESOURCE_ENERGY);
         if (upgradeResult == ERR_NOT_IN_RANGE) {
-            super.moveTo(this._targetController, this._pathColor);
+            super.moveTo(this._targetController, this.pathColor);
         }
     }
 }

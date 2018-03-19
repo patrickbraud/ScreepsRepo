@@ -1,0 +1,58 @@
+Harvesters - 5 WORK per source
+* Harvesting
+	- Harvest from designated source
+* Depositing
+	- if we have a container
+    	- deposit into container (repair if necessary and not empty)
+        - if the container is full, drop the energy on the container/ground
+    - if we don't have a container
+        - if we DO have transporters, drop energy on ground
+        - if we DO NOT have transporters, deposit into extensions/spawn that need energy
+        - if no structures need energy, drop energy on ground
+
+Transporters - 2 per source
+* Transporting
+	- depsoit into extensions/spawn that need energy
+	- if the room spawn DOES have a container
+		- deposit into container if not full
+	- if the room controller DOES have a container
+		- deposit into container if not full
+	- move to spawn and drop energy
+* Collecting
+	- check for dropped energy around source
+	- if our source DOES has a container
+		- withdraw from container
+	- if our source DOES NOT have a container
+		- withdraw from our source's harvesters
+
+Upgraders - 3 for now
+* Upgrading
+	- Upgrade room controller
+* Collecting
+	- if our controller DOES have a container
+		- collect from container
+	- Check for dropped energy around the spawn drop position
+	- if our spawn DOES have a container
+		- collect from container
+	- move to spawn area and wait
+
+
+Builders - 2 per container site, 2 if construction sites present
+* Building
+	- if we have a priority construction site
+		- Build the priority construction site if it exists
+	- if construction sites exist
+		- build the closest construction site
+	- if no construction sites exist
+		- upgrade the controller
+* Collecting
+	- check for dropped energy at spawn
+	- if the room spawn DOES have a container
+		- collect from spawn container if it has energy
+	- check for dropped energy at sources
+	- if we have source containers
+		- collect from source container if it has energy
+	- move to spawn area and wait
+
+
+

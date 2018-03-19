@@ -63,6 +63,8 @@ export class Screep{
         this.creep.memory.Status = currentStatus;
     }
 
+    pathColor: string;
+
     constructor(creep: Creep, roomManager: RoomMgr)
     {
         this.creep = creep;
@@ -158,5 +160,22 @@ export class Screep{
 
     checkSamePos(pos1: RoomPosition, pos2: RoomPosition) {
         return (pos1.x == pos2.x && pos1.y == pos2.y);
+    }
+
+    checkForDroppedEnergy(possiblePositions: RoomPosition[]): Resource{
+        for (let pos of possiblePositions) {
+            let energyFound = this.creep.room.lookForAt(LOOK_ENERGY, pos);
+            if (energyFound.length > 0) {
+                return energyFound[0] as Resource;
+            }
+        }
+        return undefined;
+    }
+
+    pickUpEnergy(energy: Resource) {
+        let pickUpResult = this.creep.pickup(energy);
+        if (pickUpResult == ERR_NOT_IN_RANGE) {
+            this.moveTo(energy, this.pathColor);
+        }
     }
 }

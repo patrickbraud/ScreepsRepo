@@ -2,6 +2,7 @@ import { Harvester } from "Creeps/Harvester";
 import { Upgrader } from "Creeps/Upgrader";
 import { RoomMgr } from "./RoomMgr";
 import { Transporter } from "Creeps/Transporter";
+import { Builder } from "Creeps/Builder";
 
 export class CreepMgr {
 
@@ -15,6 +16,7 @@ export class CreepMgr {
     public harvesters: Harvester[] = [];
     public upgraders: Upgrader[] = [];
     public transporters: Transporter[] = [];
+    public builders: Builder[] = [];
 
     // private _spawnUpgraderOpts = {
     //     Role: 'upgrader',
@@ -44,9 +46,20 @@ export class CreepMgr {
         this.transporters.forEach(transporter => {
             transporter.work();
         })
+        this.builders.forEach(builder => {
+            builder.work();
+        })
     }
 
     loadCreeps() {
+        // Clear dead creeps from memory
+        for(let name in Memory.creeps) {
+            if(!Game.creeps[name]) {
+                delete Memory.creeps[name];
+                console.log('Clearing non-existing creep memory:', name);
+            }
+        }
+
         for (let creepName in Game.creeps) {
             let creep = Game.creeps[creepName];
             if (!creep.spawning) {
@@ -67,6 +80,9 @@ export class CreepMgr {
             }
             else if (creep.memory.Role == 'upgrader') {
                 this.upgraders.push(new Upgrader(creep, this._roomMgr));
+            }
+            else if (creep.memory.Role == 'builder') {
+                this.builders.push(new Builder(creep, this._roomMgr));
             }
         }
     }

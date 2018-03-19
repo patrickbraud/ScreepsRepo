@@ -16,6 +16,8 @@ export class RoomMgr {
     public creepNames: string[];
     public transporters: Creep[];
     public harvesters: Creep[];
+    public upgraders: Creep[];
+    public builders: Creep[];
 
     public extensions: Extension[];
     public constructionSites: ConstructionSite[];
@@ -36,8 +38,13 @@ export class RoomMgr {
     }
 
     runRooms() {
+        // Create structures
         this.StashMgr.createNeededStashes();
-        this.StashMgr.spawnNeededTransporters();
+
+        // Create creeps
+        this.spawnNeededBuilders();
+        this.spawnNeededUpgraders();
+        this.sourceMgr.spawnNeededTransporters();
         this.sourceMgr.spawnNeededHarvesters();
     }
 
@@ -85,6 +92,8 @@ export class RoomMgr {
         this.creeps = [];
         this.transporters = [];
         this.harvesters = [];
+        this.upgraders = [];
+        this.builders = [];
 
         for (let creepName in Game.creeps) {
             if (!Game.creeps[creepName]) {
@@ -105,6 +114,56 @@ export class RoomMgr {
                 else if (role == 'harvester') {
                     this.harvesters.push(creep);
                 }
+                else if (role == 'upgrader') {
+                    this.upgraders.push(creep);
+                }
+                else if (role == 'builder') {
+                    this.builders.push(creep);
+                }
+            }
+        }
+    }
+
+    spawnNeededUpgraders() {
+        if (/*this.extensions.length >= 5 &&*/ this.upgraders.length < 3) {
+            let body: string[];
+            // If we have no transporters, prioritize move
+            if (this.transporters.length == 0) {
+                body = this.baseRoomSpawn.createWorkerBody(1, 2, 3, [CARRY, MOVE], false)
+            }
+            else {
+                body = this.baseRoomSpawn.createWorkerBody(2, 4, 6, [CARRY, MOVE, WORK], false)
+            }
+
+            this.baseRoomSpawn.spawnUpgrader(body);
+        }
+    }
+
+    spawnNeededBuilders() {
+        let generalBuilders = this.builders.filter(builder => {
+            return builder.memory.PrioritySiteID == "0";
+        })
+        let priorityBuilders = this.builders.filter(builder => {
+            return builder.memory.PrioritySiteID != "0";
+        })
+        // console.log('general builders: ' + generalBuilders.length);
+        // console.log('priority builders: ' + priorityBuilders.length);
+        // console.log('total builders: ' + this.builders.length);
+        if (this.constructionSites.length > 0) {
+            for (let conSite of this.StashMgr.containerConstructionSites) {
+
+                let buildersTargetingSite = this.builders.filter(builder => {
+                    return builder.memory.PrioritySiteID == conSite.id;
+                })
+                if (buildersTargetingSite.length < 2) {
+                    this.baseRoomSpawn.spawnBuilder(conSite.id);
+                    return;
+                }
+            }
+
+            if (priorityBuilders.length < 6 && generalBuilders.length < 3) {
+                this.baseRoomSpawn.spawnBuilder("0");
+                return;
             }
         }
     }
@@ -133,13 +192,19 @@ export class RoomMgr {
             * * y
             Start at the x, end at the y
         */
-        let currentPos = new RoomPosition(centerObject.pos.x - 1, centerObject.pos.y - 1, centerObject.pos.roomName);
+        let currentPos: RoomPosition;
+        if (centerObject.hasOwnProperty('pos')) {
+            currentPos = new RoomPosition(centerObject.pos.x - 1, centerObject.pos.y - 1, centerObject.pos.roomName);
+        }
+        else {
+            currentPos = new RoomPosition(centerObject.x - 1, centerObject.y - 1, centerObject.roomName);
+        }
         for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
             for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
                 if (currentPos != centerObject.pos) {
 
                     let invalid = false;
-                    for (let terrain in invalidTerrain) {
+                    for (let terrain of invalidTerrain) {
                         invalid = RoomMgr.positionIsTerrainType(currentPos, terrain);
                         if (invalid) { break; }
                     }
@@ -157,5 +222,37 @@ export class RoomMgr {
         let lookResult = Game.rooms[pos.roomName].lookForAt(LOOK_TERRAIN, pos);
         //console.log('x: ' + pos.x + ' y: ' + pos.y + ' - ' + lookResult.toString() + ' - ' + (lookResult.toString() != 'wall'));
         return lookResult.toString() == terrain;
+    }
+
+    static getBoxPositions(radiusFromCenter: number, centerPosition: RoomPosition): RoomPosition[] {
+        let edgeLength = radiusFromCenter * 2 + 1;
+
+        let topLeftStart = new RoomPosition(centerPosition.x - radiusFromCenter,
+                                        centerPosition.y - radiusFromCenter,
+                                        centerPosition.roomName);
+        let topRightStart = new RoomPosition(centerPosition.x + radiusFromCenter,
+                                        centerPosition.y - radiusFromCenter,
+                                        centerPosition.roomName);
+        let bottomLeftStart = new RoomPosition(centerPosition.x - radiusFromCenter,
+                                        centerPosition.y + radiusFromCenter,
+                                        centerPosition.roomName);
+        let bottomRightStart = new RoomPosition(centerPosition.x + radiusFromCenter,
+                                        centerPosition.y + radiusFromCenter,
+                                        centerPosition.roomName);
+
+        let boxPositions: RoomPosition[] = [];
+        for(let edgeCount = 0; edgeCount < edgeLength - 1; edgeCount++) {
+            boxPositions.push(topLeftStart);
+            boxPositions.push(topRightStart);
+            boxPositions.push(bottomLeftStart);
+            boxPositions.push(bottomRightStart);
+
+            topLeftStart.x += 1;
+            topRightStart.y += 1;
+            bottomLeftStart.y -= 1;
+            bottomRightStart.x -= 1;
+        }
+
+        return boxPositions;
     }
 }

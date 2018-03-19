@@ -4,5 +4,6 @@ export enum CreepStatus{
     Depositing = 1,
     Upgrading = 2,
     Collecting = 3,
-    Transporting = 4
+    Transporting = 4,
+    Building = 5
 }

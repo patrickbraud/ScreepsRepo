@@ -1,9 +1,8 @@
 import { CreepStatus } from "Enums/CreepEnums";
-import { IHarvester } from "Interfaces/IHarvester";
 import { Screep } from "./Screep";
 import { RoomMgr } from "Mgrs/RoomMgr";
 
-export class Harvester extends Screep implements IHarvester{
+export class Harvester extends Screep {
 
     // TargetSourceID Property
     private _targetSourceID: string;
@@ -16,92 +15,104 @@ export class Harvester extends Screep implements IHarvester{
         this.creep.memory.TargetSourceID = targetID;
     }
 
-    // TargetDepositID Property
-    private _TargetDepositID: string;
-    get TargetDepositID(): string {
-        return this._TargetDepositID;
-    }
-    set TargetDepositID(targetID: string) {
-        if (targetID == undefined) { targetID = "0"; }
-        this._TargetDepositID = targetID;
-        this.creep.memory.TargetDepositID = targetID;
-    }
-
-    private _pathColor = "yellow";
-
     constructor(creep: Creep, roomMgr: RoomMgr) {
         super(creep, roomMgr);
         this.TargetSourceID = creep.memory.TargetSourceID;
-        this.TargetDepositID = creep.memory.TargetDepositID;
         this.Status = creep.memory.Status;
+        super.pathColor = "#4af900"
     }
 
     work() {
         // If we are harvesting and we are full
-        if(this.Status == CreepStatus.Harvesting && this.creep.carry.energy == this.creep.carryCapacity) {
+        if (this.Status == CreepStatus.Harvesting && this.creep.carry.energy == this.creep.carryCapacity) {
             this.Status = CreepStatus.Depositing;
-            this.creep.say('🔄 deposit');
+            this.creep.say('⛏️ deposit');
         }
         // If w are Depositing and we are empty
-	    if(this.Status == CreepStatus.Depositing && this.creep.carry.energy == 0) {
-	        this.Status = CreepStatus.Harvesting;
-            this.creep.say('⚒️ harvest');
-            this.TargetDepositID = "0";
+        if (this.Status == CreepStatus.Depositing && this.creep.carry.energy == 0) {
+            this.Status = CreepStatus.Harvesting;
+            this.creep.say('⛏️ harvest');
         }
 
-        let target: Source | Structure = null;
-        if (this.Status == CreepStatus.Harvesting)
-        {
-            //console.log('I should be harvesting');
-            let targetSource: Source = null;
-            if (this.TargetSourceID == "0") {
-                targetSource = this.roomMgr.sourceMgr.getBestSource(this);
-                this.TargetSourceID = targetSource.id;
-            }
-            else {
-                targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
-            }
-            target = targetSource;
+        // Harvest from our designated source
+        if (this.Status == CreepStatus.Harvesting) {
+            let targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
+            this.harvest(targetSource);
         }
+        // * if we have a container
+        //   - deposit into container (repair if necessary and not empty)
+        //   - if the container is full, drop the energy on the ground/container
+        // * if we don't have a container
+        //   - if we DO have transporters, drop energy on ground
+        //   - if we DO NOT have transporters, deposit into extensions/spawn that need energy
+        //   - if no structures need energy, drop energy on ground
         else if (this.Status == CreepStatus.Depositing) {
 
-            //console.log('I should be Depositing');
-            let targetDeposit: any = null;
-            if (this.TargetDepositID == "0") {
-                targetDeposit = this.roomMgr.getBestDeposit(this);
-                if (targetDeposit != null && targetDeposit != undefined) {
-                    this.TargetDepositID =targetDeposit.id;
-                }
-            }
-            else {
-                targetDeposit = Game.getObjectById(this.TargetDepositID);
-                if (targetDeposit.energy == targetDeposit.energyCapacity) {
-                    targetDeposit = this.roomMgr.getBestDeposit(this);
-                }
-            }
-            target = targetDeposit;
-        }
+            let mySource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
+            let sourceContainer = this.roomMgr.StashMgr.getContainerForSource(mySource);
 
-        if (target != null && target != undefined) {
-            this.doAction(target);
-        }
-        else {
-            this.upgrade();
-            // if (Game.time % 2 == 0) {
-            //     this.creep.say('zZz');
-            // }
-            // this.creep.memory.MoveID = "0";
-            // this.creep.memory.MovePath = "";
+            // * if we have a container
+            if (sourceContainer != undefined) {
+                //   - (repair if necessary and not empty)
+                if (sourceContainer.hits < sourceContainer.hitsMax
+                    && sourceContainer.store[RESOURCE_ENERGY] > 0) {
+                    this.creep.say('🔨repair')
+                    this.repairContainer(sourceContainer);
+                    return;
+                }
+
+                //   - if the container is full, drop the energy on the ground/container
+                if (sourceContainer.store[RESOURCE_ENERGY] == sourceContainer.storeCapacity) {
+                    this.creep.say('🔻drop');
+                    this.creep.drop(RESOURCE_ENERGY);
+                    return;
+                }
+
+                //   - deposit into container
+                this.depositIntoStructure(sourceContainer);
+                return;
+            }
+            // * if we don't have a container
+            else {
+                //   - if we DO have transporters, drop energy on ground
+                let transportersForSource = this.roomMgr.transporters.filter(transporter => {
+                    let transporterSource = this.roomMgr.sourceMgr.getSourceByID(transporter.memory.TargetSourceID);
+                    return transporterSource == mySource;
+                })
+                if (transportersForSource.length > 0) {
+                    this.creep.drop(RESOURCE_ENERGY);
+                    return;
+                }
+
+                //   - if we DO NOT have transporters, deposit into extensions/spawn that need energy
+                let extensionsAndSpawnNeedEnergy = this.roomMgr.extensions.filter(ext => {
+                    return ext.energy < ext.energyCapacity;
+                })
+                if (this.roomMgr.baseRoomSpawn.energy < this.roomMgr.baseRoomSpawn.energyCapacity) {
+                    extensionsAndSpawnNeedEnergy.push(this.roomMgr.baseRoomSpawn);
+                }
+                if (extensionsAndSpawnNeedEnergy.length > 0) {
+                    this.depositIntoStructure(extensionsAndSpawnNeedEnergy[0]);
+                    return;
+                }
+
+                //   - if no structures need energy, drop energy on ground
+                this.creep.drop(RESOURCE_ENERGY);
+            }
         }
     }
 
-    doAction(target: Source | Structure) {
-
-        if (this.Status == CreepStatus.Harvesting) {
-            this.harvest(target as Source);
+    repairContainer(container: Container) {
+        let repairResult = this.creep.repair(container);
+        if (repairResult == ERR_NOT_IN_RANGE) {
+            super.moveTo(container);
         }
-        else if (this.Status == CreepStatus.Depositing) {
-            this.deposit(target as Structure);
+    }
+
+    transferToTransporter(transporter: Creep) {
+        let transferResult = this.creep.transfer(transporter, RESOURCE_ENERGY);
+        if (transferResult == ERR_NOT_IN_RANGE) {
+            super.moveTo(transporter, this.pathColor);
         }
     }
 
@@ -110,23 +121,23 @@ export class Harvester extends Screep implements IHarvester{
 
         let harvestResult = this.creep.harvest(source);
         if (harvestResult == ERR_NOT_IN_RANGE) {
-            super.moveTo(source, this._pathColor);
+            super.moveTo(source, this.pathColor);
         }
     }
 
-    deposit(target: Structure) {
+    depositIntoStructure(target: Structure) {
 
         let transferResult = this.creep.transfer(target, RESOURCE_ENERGY);
         if (transferResult == ERR_NOT_IN_RANGE) {
-            super.moveTo(target, this._pathColor);
+            super.moveTo(target, this.pathColor);
         }
     }
 
-    upgrade() {
+    upgradeController() {
         let targetController = this.roomMgr.baseRoomController;
         let upgradeResult = this.creep.transfer(targetController, RESOURCE_ENERGY);
         if (upgradeResult == ERR_NOT_IN_RANGE) {
-            super.moveTo(targetController, this._pathColor);
+            super.moveTo(targetController, this.pathColor);
         }
     }
 }

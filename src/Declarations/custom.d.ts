@@ -16,8 +16,10 @@ interface Creep {
 
 interface StructureSpawn {
     spawnHarvester(targetSource: Source): number;
-    spawnTransporter(targetContainer: Container | ConstructionSite, containerBuilder: Boolean): number;
+    spawnTransporter(targetSource: Source): number;
+    spawnUpgrader(body: string[]): number;
+    spawnBuilder(prioritySiteID: string): number;
     createWorkerBody(maxWork: number, maxCarry: number, maxMove: number, priority: string[], waitForMax: Boolean): string[];
-    balanceBodyParts(body: string[], balanceParts: string[]): string[];
+    createBalancedBody(balanceParts: string[], waitForMax: Boolean): string[];
     generateCreepName(role: string, colonyID: string): string;
 }

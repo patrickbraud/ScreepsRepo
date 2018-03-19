@@ -68,67 +68,41 @@ export function spawnPrototypes() {
         return body;
     };
 
-    // StructureSpawn.prototype.balanceBodyParts = function(body: string[], balanceParts: string[]): string[] {
+    StructureSpawn.prototype.createBalancedBody = function(balanceParts: string[], waitForMax: Boolean): string[] {
 
-    //     let workCount = 0;
-    //     let carryCount = 0;
-    //     let moveCount = 0;
-    //     for (let index = 0; index < balanceParts.length; index++) {
-    //         let bodyPart: string = balanceParts[index];
-    //         switch(bodyPart) {
-    //             case WORK: {
-    //                 workCount = body.filter(part => {
-    //                     return part == WORK;
-    //                 }).length;
-    //             }
-    //             case CARRY: {
-    //                 carryCount = body.filter(part => {
-    //                     return part == CARRY;
-    //                 }).length;
-    //             }
-    //             case MOVE: {
-    //                 moveCount = body.filter(part => {
-    //                     return part == MOVE;
-    //                 }).length;
-    //             }
-    //         }
-    //     }
+        let body: string[] = [];
+        let energyRequired = 0;
+        let energyAvailable = waitForMax ? this.room.energyCapacityAvailable : this.room.energyAvailable;
 
-    //     let workParts = body.filter(part => {
-    //         return part == WORK;
-    //     })
-    //     let carryParts = body.filter(part => {
-    //         return part == CARRY;
-    //     })
-    //     let moveParts = body.filter(part => {
-    //         return part == MOVE;
-    //     })
+        // Build the largest body we can make with our current energy
+        do {
+            for (let part of balanceParts) {
+                body.push(part);
+                energyRequired += BODYPART_COST[part];
+            }
+        }
+        while (energyRequired < energyAvailable);
 
-    //     let baseBody = body.filter(part => {
-    //         return balanceParts.fd
-    //     })
+        // Remove pairs of balanced parts if we went over our room limit
+        do {
+            for (let part of balanceParts) {
+                body.pop();
+                energyRequired -= BODYPART_COST[part];
+            }
+        }
+        while (energyRequired > this.room.energyCapacityAvailable);
 
-    //     let partsEqual: Boolean = false;
-    //     do {
-
-    //         if (workCount > carryCount && workCount > moveCount) {
-    //             body.
-    //         }
-    //         Math
-    //     }
-    //     while ()
-
-    // }
+        return body;
+    }
 
     StructureSpawn.prototype.spawnHarvester = function(targetSource: Source): number {
 
-        let body: string[] = this.createWorkerBody(5, 1, 1, [WORK, CARRY, MOVE], false);
+        let body: string[] = this.createWorkerBody(5, 2, 1, [WORK, CARRY, MOVE], false);
         console.log('Harvester Body generated: ' + body.toString());
 
         let spawnHarvesterOpts = {
             Role: 'harvester',
             TargetSourceID: targetSource.id,
-            TargetDepositID: 0,
             MovePath: "",
             MoveID: 0,
             PreviousPos: undefined,
@@ -147,21 +121,14 @@ export function spawnPrototypes() {
         return spawnResult;
     };
 
-    StructureSpawn.prototype.spawnTransporter = function(targetContainer: Container | ConstructionSite, containerBuilder: Boolean): number {
+    StructureSpawn.prototype.spawnTransporter = function(targetSource: Source): number {
 
-        let body: string[] = [];
-        if (containerBuilder) {
-            body = this.createWorkerBody(1, 2, 2, [CARRY, MOVE, WORK], false);
-            console.log('BuilderTransporter Body generated: ' + body.toString());
-        }
-        else {
-            body = this.createWorkerBody(0, 3, 3, [MOVE, CARRY], true)
-            console.log('Transporter Body generated: ' + body.toString());
-        }
+        let body: string[] = this.createBalancedBody([CARRY, MOVE], true);
+        console.log('Transporter Body generated ' + body.toString());
 
         let spawnTransporterOpts = {
             Role: 'transporter',
-            TargetContainerID: targetContainer.id,
+            TargetSourceID: targetSource.id,
             MovePath: "",
             MoveID: 0,
             PreviousPos: undefined,
@@ -176,6 +143,56 @@ export function spawnPrototypes() {
         let spawnResult = canSpawn;
         if (canSpawn == OK){
             spawnResult = this.spawnCreep(body, creepName, { memory: spawnTransporterOpts });
+        }
+        return spawnResult;
+    }
+
+    StructureSpawn.prototype.spawnUpgrader = function(body: string[]) {
+
+        console.log('Upgrader Body generated: ' + body.toString());
+
+        let spawnUpgraderOpts = {
+            Role: 'upgrader',
+            MovePath: "",
+            MoveID: 0,
+            PreviousPos: undefined,
+            PreviousMoveResult: undefined,
+            Status: CreepStatus.Collecting,
+            ColonyID: this.memory.ColonyID
+        }
+
+        let creepName = this.generateCreepName(spawnUpgraderOpts.Role, spawnUpgraderOpts.ColonyID);
+
+        let canSpawn = this.spawnCreep(body, creepName, { dryRun: true });
+        let spawnResult = canSpawn;
+        if (canSpawn == OK){
+            spawnResult = this.spawnCreep(body, creepName, { memory: spawnUpgraderOpts });
+        }
+        return spawnResult;
+    }
+
+    StructureSpawn.prototype.spawnBuilder = function(prioritySiteID: string): number {
+
+        let body: string[] = this.createWorkerBody(2, 3, 5, [CARRY, MOVE, WORK], false);
+        console.log('Builder Body generated: ' + body.toString());
+
+        let spawnBuilderOpts = {
+            Role: 'builder',
+            PrioritySiteID: prioritySiteID,
+            MovePath: "",
+            MoveID: 0,
+            PreviousPos: undefined,
+            PreviousMoveResult: undefined,
+            Status: CreepStatus.Collecting,
+            ColonyID: this.memory.ColonyID
+        }
+
+        let creepName = this.generateCreepName(spawnBuilderOpts.Role, spawnBuilderOpts.ColonyID)
+
+        let canSpawn = this.spawnCreep(body, creepName, { dryRun: true });
+        let spawnResult = canSpawn;
+        if (canSpawn == OK){
+            spawnResult = this.spawnCreep(body, creepName, { memory: spawnBuilderOpts });
         }
         return spawnResult;
     }

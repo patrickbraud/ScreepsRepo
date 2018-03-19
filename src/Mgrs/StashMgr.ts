@@ -6,14 +6,22 @@ export class StashMgr {
     containerConstructionSites: ConstructionSite[];
 
     sourceContainers: {container: Container, source: Source}[];
-    sourceConstructionSites: {conSite: ConstructionSite, source}[];
+    sourceContainerConSites: {conSite: ConstructionSite, source}[];
+
+    controllerContainer: Container;
+    controllerContainerConSite: ConstructionSite;
+
+    spawnContainer: Container;
+    spawnContainerConSite: ConstructionSite;
+
+    spawnEnergyDropPosition: RoomPosition;
 
     private _roomMgr: RoomMgr;
 
     constructor(roomMgr: RoomMgr) {
         this._roomMgr = roomMgr;
         this.sourceContainers = [];
-        this.sourceConstructionSites = [];
+        this.sourceContainerConSites = [];
         this._loadStashes();
     }
 
@@ -56,7 +64,7 @@ export class StashMgr {
                                     conSite: containerConstructionFound,
                                     source: source
                                 }
-                                this.sourceConstructionSites.push(sourceConSite);
+                                this.sourceContainerConSites.push(sourceConSite);
                                 break;
                             }
                         }
@@ -79,78 +87,33 @@ export class StashMgr {
 
                 if (hasContainer == undefined) {
 
-                    let hasConSite = this.sourceConstructionSites.find(sourceConSite => {
+                    let hasConSite = this.sourceContainerConSites.find(sourceConSite => {
                         return sourceConSite.source.id == source.id;
                     });
 
                     if (hasConSite == undefined) {
-                        let conSitePos = this._getBestContainerPos(RoomMgr.validPositions(source, ['wall']));
+                        let conSitePos = this._getBestSourceContainerPos(RoomMgr.validPositions(source, ['wall']));
                         source.room.createConstructionSite(conSitePos, STRUCTURE_CONTAINER);
                     }
                 }
-
             }
         }
     }
 
-    spawnNeededTransporters(): Boolean {
-        let spawnRequested: Boolean = false;
-
-        // Get all transport creeps whose target container doesn't exist anymore
-        let toBeTransitioned: Creep[] = this._roomMgr.transporters.filter( creep => {
-            return this.containers.find(container => {
-                return container.id == creep.id;
-            })
-            //return !(this.containers.hasOwnProperty(creep.memory.TargetContainerID));
-        })
-
-        // If there are any container construction sites,
-        // then spawn ### transporters per site. They will build
-        // the site, then transition into true transporters
-        for (let conSite of this.containerConstructionSites) {
-            // all transporter creeps who are targeting this construction site as their container
-            let containerBuilders = this._roomMgr.transporters.filter( creep => {
-                return creep.memory.TargetContainerID == conSite.id;
-            });
-
-            if (containerBuilders.length < 1) {
-                // Spawn container builder (transporter)
-                // Work [WORK, CARRY, MOVE, CARRY, CARRY, MOVE, MOVE]
-                // maxWork: 1, maxCarry: 2, maxMove: 2, priority: [CARRY, MOVE, WORK]
-                // TargetContainerID = conSite.id
-                spawnRequested = true;
-                this._roomMgr.baseRoomSpawn.spawnTransporter(conSite, true);
-                return;
-            }
+    getSpawnContainerPos(): RoomPosition {
+        if (this.spawnContainer != undefined) {
+            return this.spawnContainer.pos;
+        }
+        else if (this.spawnContainerConSite != undefined) {
+            return this.spawnContainerConSite.pos;
+        }
+        else if (this.spawnEnergyDropPosition != undefined) {
+            return this.spawnEnergyDropPosition;
         }
 
-        for (let container of this.containers) {
-            // all transporter creeps who are targeting this container
-            let transporters = this._roomMgr.transporters.filter( creep => {
-                return creep.memory.TargetContainerID == container.id;
-            });
+        this.spawnEnergyDropPosition = new RoomPosition(this._roomMgr.baseRoomSpawn.pos.x, this._roomMgr.baseRoomSpawn.pos.y + 4, this._roomMgr.baseRoomSpawn.room.name);
 
-            // Transition transporters who were targeting a container that has been finished
-            let neededCreeps = 3 - transporters.length;
-            for (; neededCreeps > 0 && toBeTransitioned.length > 0; neededCreeps--) {
-                let transitionedCreep: Creep = toBeTransitioned.pop();
-                transitionedCreep.memory.TargetContainerID = container.id;
-                transporters.push(transitionedCreep);
-            }
-
-            // If we still don't have enough transporters after transitioning, spawn more
-            if (transporters.length < 3) {
-                // true transporter
-                // Balance same # of MOVE parts as non-MOVE parts for plains
-                // --------half # of MOVE parts as non-MOVE parts for roads
-                // maxCarry: 5, maxMove: 5, priority: [CARRY, MOVE, WORK], balance: [MOVE, CARRY]
-                // TargetContainerID = container.id
-                this._roomMgr.baseRoomSpawn.spawnTransporter(container, false);
-                return;
-            }
-        }
-
-        return spawnRequested;
+        return this.spawnEnergyDropPosition;
     }
 
     // Get Container Methods
@@ -178,7 +141,7 @@ export class StashMgr {
     // Get Construction Site methods
     // -----------------------------
     getContainerConSiteByID(conSiteID: string): ConstructionSite {
-        for (let sourceConSite of this.sourceConstructionSites) {
+        for (let sourceConSite of this.sourceContainerConSites) {
             if (sourceConSite.conSite.id == conSiteID) {
                 return sourceConSite.conSite;
             }
@@ -188,7 +151,7 @@ export class StashMgr {
     }
 
     getContainerConSiteForSource(source: Source): ConstructionSite {
-        for (let sourceConSite of this.sourceConstructionSites) {
+        for (let sourceConSite of this.sourceContainerConSites) {
             if (sourceConSite.source.id == source.id) {
                 return sourceConSite.conSite;
             }
@@ -210,7 +173,7 @@ export class StashMgr {
     }
 
     getSourceForContainerConSite(conSite: ConstructionSite) {
-        for (let sourceConSite of this.sourceConstructionSites) {
+        for (let sourceConSite of this.sourceContainerConSites) {
             if (sourceConSite.conSite.id == conSite.id) {
                 return sourceConSite.source;
             }
@@ -219,7 +182,7 @@ export class StashMgr {
         return undefined;
     }
 
-    private _getBestContainerPos(validPositions: RoomPosition[]) {
+    private _getBestSourceContainerPos(validPositions: RoomPosition[]) {
         let bestPos = null;
         let maxCount = 0;
         for(let pos of validPositions) {

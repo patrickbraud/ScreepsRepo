@@ -14,17 +14,28 @@ export class SourceMgr {
         this.sources = this._roomManager.baseRoom.sourcesInRoom;
     }
 
-    spawnNeededHarvesters(): Boolean {
-        let spawnRequested: Boolean = false;
+    spawnNeededHarvesters() {
         for (let source of this.sources) {
-            if (source.harvesterWorkCount < 5 && source.harvesterCount < RoomMgr.validPositions(source, ['wall']).length) {
-                spawnRequested = true;
+            if (source.harvesterWorkCount < 5 && source.harvesterCount < source.maxCreepCount) {
                 // let neededWorkParts = 5 - source.harvesterWorkCount;
                 this._roomManager.baseRoomSpawn.spawnHarvester(source);
                 break;
             }
         }
-        return spawnRequested;
+    }
+
+    spawnNeededTransporters() {
+        for (let source of this.sources) {
+            if (source.harvesterCount > 0) {
+                let sourceTransporters = this._roomManager.transporters.filter(transporter => {
+                    return transporter.memory.TargetSourceID == source.id;
+                })
+
+                if (sourceTransporters.length < 3 && !this._roomManager.baseRoomSpawn.spawning) {
+                    this._roomManager.baseRoomSpawn.spawnTransporter(source);
+                }
+            }
+        }
     }
 
     getSourceByID(sourceID: string): Source {
@@ -55,13 +66,5 @@ export class SourceMgr {
         // console.log(orderedSources);
 
         return orderedSources[0];
-    }
-
-
-
-    static positionIsTerrainType(pos: RoomPosition, terrain: string): boolean {
-        let lookResult = Game.rooms[pos.roomName].lookForAt(LOOK_TERRAIN, pos);
-        //console.log('x: ' + pos.x + ' y: ' + pos.y + ' - ' + lookResult.toString() + ' - ' + (lookResult.toString() != 'wall'));
-        return lookResult.toString() == terrain;
     }
 }
