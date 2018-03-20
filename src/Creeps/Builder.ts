@@ -13,6 +13,18 @@ export class Builder extends Screep {
         this.creep.memory.PrioritySiteID = this._prioritySiteID;
     }
 
+    private _collectionTargetID;
+    get CollectionTargetID(): string {
+        return this._collectionTargetID;
+    }
+    set CollectionTargetID(collectionID: string) {
+        if (collectionID == undefined) {
+            collectionID = "0";
+        }
+        this._collectionTargetID = collectionID;
+        this.creep.memory.CollectionTargetID = this._collectionTargetID;
+    }
+
     pathColor = "white";
 
     constructor(creep: Creep, roomManager: RoomMgr) {
@@ -25,6 +37,7 @@ export class Builder extends Screep {
     work() {
         // If we are Restocking and we are full
         if (this.Status == CreepStatus.Collecting && this.creep.carry.energy == this.creep.carryCapacity) {
+            this.CollectionTargetID = "0";
             this.Status = CreepStatus.Building;
             this.creep.say('🛠️Build');
         }
@@ -83,6 +96,7 @@ export class Builder extends Screep {
             let dropPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
             let spawnDropEnergy = this.checkForDroppedEnergy(RoomMgr.validPositions(dropPosition, ['wall']));
             if (spawnDropEnergy != undefined) {
+                this.CollectionTargetID = spawnDropEnergy.id;
                 this.pickUpEnergy(spawnDropEnergy);
                 return;
             }
@@ -91,42 +105,45 @@ export class Builder extends Screep {
             let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
             if (spawnContainer != undefined && spawnContainer.store[RESOURCE_ENERGY] > 0) {
                 // 	 - collect from spawn container if it has energy
+                this.CollectionTargetID = spawnContainer.id;
                 this.collectFromStructure(spawnContainer);
                 return;
             }
 
-            // * check for dropped energy at sources
-            let closestSources = this.roomMgr.sourceMgr.sources.sort((a: Source, b: Source): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
-            for (let source of closestSources) {
-                let foundEnergy = this.checkForDroppedEnergy(RoomMgr.validPositions(source, ['wall']));
-                if (foundEnergy != undefined) {
-                    this.pickUpEnergy(foundEnergy);
-                    return;
-                }
-            }
+            // // * check for dropped energy at sources
+            // let closestSources = this.roomMgr.sourceMgr.sources.sort((a: Source, b: Source): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
+            // for (let source of closestSources) {
+            //     let foundEnergy = this.checkForDroppedEnergy(RoomMgr.validPositions(source, ['wall']));
+            //     if (foundEnergy != undefined) {
+            //         this.CollectionTargetID = foundEnergy.id;
+            //         this.pickUpEnergy(foundEnergy);
+            //         return;
+            //     }
+            // }
 
-            // * if we have source containers
-            if (this.roomMgr.StashMgr.sourceContainers.length > 0) {
-                let sourceContainersWithEnergy: Container[] = [];
-                for (let srcCont of this.roomMgr.StashMgr.sourceContainers) {
-                    // if it has energy
-                    if (srcCont.container.store[RESOURCE_ENERGY] > 0) {
-                        sourceContainersWithEnergy.push(srcCont.container);
-                    }
-                }
-                // if we have source containers with energy
-                if (sourceContainersWithEnergy.length > 0) {
-                let closestSourceContainers: Container[] = sourceContainersWithEnergy.sort((a: Container, b: Container): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
-                    // 	 - collect from source container if it has energy
-                    this.collectFromStructure(closestSourceContainers[0]);
-                    return;
-                }
-            }
+            // // * if we have source containers
+            // if (this.roomMgr.StashMgr.sourceContainers.length > 0) {
+            //     let sourceContainersWithEnergy: Container[] = [];
+            //     for (let srcCont of this.roomMgr.StashMgr.sourceContainers) {
+            //         // if it has energy
+            //         if (srcCont.container.store[RESOURCE_ENERGY] > 0) {
+            //             sourceContainersWithEnergy.push(srcCont.container);
+            //         }
+            //     }
+            //     // if we have source containers with energy
+            //     if (sourceContainersWithEnergy.length > 0) {
+            //     let closestSourceContainers: Container[] = sourceContainersWithEnergy.sort((a: Container, b: Container): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
+            //         // 	 - collect from source container if it has energy
+            //         this.CollectionTargetID = closestSourceContainers[0].id;
+            //         this.collectFromStructure(closestSourceContainers[0]);
+            //         return;
+            //     }
+            // }
 
             // * move to spawn area and wait
             // let spawnDropPosition: RoomPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
             // this.moveToSpawnDropArea(spawnDropPosition);
-            if (Game.time % 3 == 0) {
+            if (Game.time % 2 == 0) {
                 this.creep.say('🛠️zZz');
             }
         }

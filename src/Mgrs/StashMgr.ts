@@ -10,10 +10,10 @@ export class StashMgr {
 
     controllerContainer: Container;
     controllerContainerConSite: ConstructionSite;
+    controllerContainerPosition: RoomPosition;
 
     spawnContainer: Container;
     spawnContainerConSite: ConstructionSite;
-
     spawnEnergyDropPosition: RoomPosition;
 
     private _roomMgr: RoomMgr;
@@ -114,6 +114,25 @@ export class StashMgr {
         this.spawnEnergyDropPosition = new RoomPosition(this._roomMgr.baseRoomSpawn.pos.x, this._roomMgr.baseRoomSpawn.pos.y + 4, this._roomMgr.baseRoomSpawn.room.name);
 
         return this.spawnEnergyDropPosition;
+    }
+
+    getControllerContainerPos(): RoomPosition {
+        if (this.controllerContainer != undefined) {
+            return this.controllerContainer.pos;
+        }
+        else if (this.controllerContainerConSite != undefined) {
+            return this.controllerContainerConSite.pos;
+        }
+
+        let possibleContainerPositions = RoomMgr.getBoxPositions(3, this._roomMgr.baseRoomController.pos);
+        for (let pos of possibleContainerPositions) {
+            if (!RoomMgr.positionIsTerrainType(pos, 'wall') && RoomMgr.validPositions(pos, ['wall']).length >= 7) {
+                this.controllerContainerPosition = pos;
+                break;
+            }
+        }
+
+        return this.controllerContainerPosition;
     }
 
     // Get Container Methods

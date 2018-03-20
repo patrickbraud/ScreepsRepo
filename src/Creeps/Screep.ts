@@ -166,6 +166,7 @@ export class Screep{
         for (let pos of possiblePositions) {
             let energyFound = this.creep.room.lookForAt(LOOK_ENERGY, pos);
             if (energyFound.length > 0) {
+                energyFound.sort((a: Resource, b: Resource): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
                 return energyFound[0] as Resource;
             }
         }

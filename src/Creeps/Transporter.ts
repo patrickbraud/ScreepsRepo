@@ -9,16 +9,50 @@ export class Transporter extends Screep{
         return this._targetSourceID;
     }
     set TargetSourceID(targetID: string) {
-        if (targetID == undefined) { targetID = "0"; }
+        //if (targetID == undefined) { targetID = "0"; }
         this._targetSourceID = targetID;
         this.creep.memory.TargetSourceID = targetID;
     }
+
+    private _targetContainerID: string;
+    get TargetContainerID(): string {
+        return this._targetContainerID;
+    }
+    set TargetContainerID(targetID: string) {
+        this._targetContainerID = targetID;
+        this.creep.memory.TargetContainerID = targetID;
+    }
+
+    // private _collectionTargetID;
+    // get CollectionTargetID(): string {
+    //     return this._collectionTargetID;
+    // }
+    // set CollectionTargetID(collectionID: string) {
+    //     if (collectionID == undefined) {
+    //         collectionID = "0";
+    //     }
+    //     this._collectionTargetID = collectionID;
+    //     this.creep.memory.CollectionTargetID = this._collectionTargetID;
+    // }
+
+    private _targetSource: Source;
+    private _targetContainer: Container;
 
     constructor(creep: Creep, roomManager: RoomMgr) {
         super(creep, roomManager);
         this.Status = creep.memory.Status;
         this.TargetSourceID = creep.memory.TargetSourceID;
         super.pathColor = "#00FFFF";
+
+        this._targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
+
+        // If this source has a container, store its info
+        if (this.TargetContainerID == undefined) {
+            this._targetContainer = this.roomMgr.StashMgr.getContainerForSource(this._targetSource);
+            if (this._targetContainer != undefined) {
+                this.TargetContainerID = this._targetContainer.id;
+            }
+        }
     }
 
     work() {
@@ -71,7 +105,7 @@ export class Transporter extends Screep{
             // * move to spawn and drop energy
             let dropPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
             if (!this.creep.pos.isEqualTo(dropPosition)) {
-                this.creep.moveTo(dropPosition, {reusePath: 20, visualizePathStyle: {stroke: this.pathColor, lineStyle: undefined}});
+                this.creep.moveTo(dropPosition, {reusePath: 15, visualizePathStyle: {stroke: this.pathColor, lineStyle: undefined}});
             }
             else {
                 this.creep.drop(RESOURCE_ENERGY);
@@ -84,8 +118,7 @@ export class Transporter extends Screep{
         //   - withdraw from our source's harvesters
         else if (this.Status == CreepStatus.Collecting) {
             // * check for dropped energy around source
-            let targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
-            let foundEnergy = super.checkForDroppedEnergy(RoomMgr.validPositions(targetSource, ['wall']));
+            let foundEnergy = super.checkForDroppedEnergy(RoomMgr.validPositions(this._targetSource, ['wall']));
             if (foundEnergy != undefined) {
                 super.pickUpEnergy(foundEnergy);
                 return;
@@ -93,23 +126,23 @@ export class Transporter extends Screep{
 
             // * if our source DOES has a container
             //   - withdraw from container
-            let sourceContainer = this.roomMgr.StashMgr.getContainerForSource(targetSource);
-            if (sourceContainer != undefined) {
-                this.collectFromStructure(sourceContainer);
+            if (this._targetContainer != undefined) {
+                this.collectFromStructure(this._targetContainer);
                 return;
             }
             // * if our source DOES NOT have a container
             //   - withdraw from our source's harvesters
-            else {
-                let harvestersWithEnergy = this.roomMgr.harvesters.filter(harvester => {
-                    return harvester.carry.energy > 0
-                            && harvester.memory.TargetSourceID == this.TargetSourceID;
-                })
-                if (harvestersWithEnergy.length > 0) {
-                    this.collectFromHarvester(harvestersWithEnergy[0]);
-                    return;
-                }
-            }
+            // else {
+            //     let harvestersWithEnergy = this.roomMgr.harvesters.filter(harvester => {
+            //         return harvester.carry.energy > 0
+            //                 && harvester.memory.TargetSourceID == this.TargetSourceID;
+            //     })
+            //     if (harvestersWithEnergy.length > 0) {
+            //         this.CollectionTargetID = harvestersWithEnergy[0].id;
+            //         this.collectFromHarvester(harvestersWithEnergy[0]);
+            //         return;
+            //     }
+            // }
 
             if (Game.time % 3 == 0) {
                 this.creep.say('🚚zZz');

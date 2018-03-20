@@ -4,6 +4,18 @@ import { RoomMgr } from "Mgrs/RoomMgr";
 
 export class Upgrader extends Screep{
 
+    private _collectionTargetID;
+    get CollectionTargetID(): string {
+        return this._collectionTargetID;
+    }
+    set CollectionTargetID(collectionID: string) {
+        if (collectionID == undefined) {
+            collectionID = "0";
+        }
+        this._collectionTargetID = collectionID;
+        this.creep.memory.CollectionTargetID = this._collectionTargetID;
+    }
+
     private _targetController: Controller;
 
     constructor(creep: Creep, roomManager: RoomMgr) {
@@ -17,6 +29,7 @@ export class Upgrader extends Screep{
     work() {
         // If we are restocking and we are full
         if (this.Status == CreepStatus.Collecting && this.creep.carry.energy == this.creep.carryCapacity) {
+            this.CollectionTargetID = "0";
             this.Status = CreepStatus.Upgrading;
             this.creep.say('⚙️upgrade');
         }
@@ -43,6 +56,7 @@ export class Upgrader extends Screep{
             let controllerContainer = this.roomMgr.StashMgr.controllerContainer;
             if (controllerContainer != undefined) {
                 //   - collect from container
+                this.CollectionTargetID = controllerContainer.id;
                 this.collectFromContainer(controllerContainer);
             }
 
@@ -50,6 +64,7 @@ export class Upgrader extends Screep{
             let dropPosition: RoomPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
             let energyFound = this.checkForDroppedEnergy(RoomMgr.validPositions(dropPosition, ['wall']));
             if (energyFound != undefined) {
+                this.CollectionTargetID = energyFound.id;
                 this.pickUpEnergy(energyFound);
                 return;
             }
@@ -58,6 +73,7 @@ export class Upgrader extends Screep{
             let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
             if (spawnContainer != undefined) {
                 //   - collect from container
+                this.CollectionTargetID = spawnContainer.id;
                 this.collectFromContainer(spawnContainer);
             }
 

@@ -50,12 +50,16 @@ export class Harvester extends Screep {
 
             let mySource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
             let sourceContainer = this.roomMgr.StashMgr.getContainerForSource(mySource);
-
+            //   - if we DO have transporters, drop energy on ground
+            let transportersForSource = this.roomMgr.transporters.filter(transporter => {
+                let transporterSource = this.roomMgr.sourceMgr.getSourceByID(transporter.memory.TargetSourceID);
+                return transporterSource == mySource;
+            })
             // * if we have a container
-            if (sourceContainer != undefined) {
+            if (sourceContainer != undefined && transportersForSource.length > 0) {
                 //   - (repair if necessary and not empty)
                 if (sourceContainer.hits < sourceContainer.hitsMax
-                    && sourceContainer.store[RESOURCE_ENERGY] > 0) {
+                    /*&& sourceContainer.store[RESOURCE_ENERGY] > 0*/) {
                     this.creep.say('🔨repair')
                     this.repairContainer(sourceContainer);
                     return;
@@ -75,10 +79,10 @@ export class Harvester extends Screep {
             // * if we don't have a container
             else {
                 //   - if we DO have transporters, drop energy on ground
-                let transportersForSource = this.roomMgr.transporters.filter(transporter => {
-                    let transporterSource = this.roomMgr.sourceMgr.getSourceByID(transporter.memory.TargetSourceID);
-                    return transporterSource == mySource;
-                })
+                // let transportersForSource = this.roomMgr.transporters.filter(transporter => {
+                //     let transporterSource = this.roomMgr.sourceMgr.getSourceByID(transporter.memory.TargetSourceID);
+                //     return transporterSource == mySource;
+                // })
                 if (transportersForSource.length > 0) {
                     this.creep.drop(RESOURCE_ENERGY);
                     return;
@@ -92,6 +96,7 @@ export class Harvester extends Screep {
                     extensionsAndSpawnNeedEnergy.push(this.roomMgr.baseRoomSpawn);
                 }
                 if (extensionsAndSpawnNeedEnergy.length > 0) {
+                    extensionsAndSpawnNeedEnergy.sort((a: Structure, b: Structure): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
                     this.depositIntoStructure(extensionsAndSpawnNeedEnergy[0]);
                     return;
                 }

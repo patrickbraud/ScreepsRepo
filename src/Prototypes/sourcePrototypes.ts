@@ -1,3 +1,5 @@
+import { RoomMgr } from "Mgrs/RoomMgr";
+
 export function sourcePrototypes() {
 
     Object.defineProperty(Source.prototype, "maxCreepCount", {
@@ -51,6 +53,18 @@ export function sourcePrototypes() {
         }
     });
 
+    Object.defineProperty(Source.prototype, "transporterCount", {
+        get: function myProperty(): number {
+            let transportersTargetingSource = 0;
+            for (let creep of this.creepsTargeting) {
+                if (creep.memory.Role == 'transporter') {
+                    transportersTargetingSource++;
+                }
+            }
+            return transportersTargetingSource;
+        }
+    });
+
     Object.defineProperty(Source.prototype, "harvesterWorkCount", {
         get: function myProperty(): number {
             let totalWorkParts = 0;
@@ -60,6 +74,25 @@ export function sourcePrototypes() {
                 }
             }
             return totalWorkParts;
+        }
+    });
+
+    Object.defineProperty(Source.prototype, "droppedEnergy", {
+        get: function myProperty(): number {
+            let validPositions = RoomMgr.validPositions(this, ['wall']);
+            //console.log(validPositions);
+            let droppedEnergyAmount: number = 0;
+            for (let pos of validPositions) {
+                let [energyFound] = this.room.lookForAt(LOOK_ENERGY, pos);
+                //console.log(energyFound);
+                if (energyFound != undefined) {
+                    // console.log('ID: ' + energyFound.id)
+                    // console.log('Resource Type: ' + energyFound.resourceType);
+                    // console.log('Amount: ' + energyFound.amount);
+                    droppedEnergyAmount += energyFound.amount;
+                }
+            }
+            return droppedEnergyAmount;
         }
     });
 }

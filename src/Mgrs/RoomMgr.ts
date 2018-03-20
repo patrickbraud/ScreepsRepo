@@ -42,10 +42,10 @@ export class RoomMgr {
         this.StashMgr.createNeededStashes();
 
         // Create creeps
-        this.spawnNeededBuilders();
-        this.spawnNeededUpgraders();
-        this.sourceMgr.spawnNeededTransporters();
-        this.sourceMgr.spawnNeededHarvesters();
+        if (this.sourceMgr.spawnNeededHarvesters()) { return;}
+        if (this.sourceMgr.spawnNeededTransporters()) { return; }
+        if (this.spawnNeededBuilders()) {return };
+        if (this.spawnNeededUpgraders()) { return };
     }
 
     getBestDeposit(screep: Screep): Structure {
@@ -124,48 +124,88 @@ export class RoomMgr {
         }
     }
 
-    spawnNeededUpgraders() {
-        if (/*this.extensions.length >= 5 &&*/ this.upgraders.length < 3) {
-            let body: string[];
-            // If we have no transporters, prioritize move
-            if (this.transporters.length == 0) {
-                body = this.baseRoomSpawn.createWorkerBody(1, 2, 3, [CARRY, MOVE], false)
+    spawnNeededUpgraders(): Boolean {
+        if (this.transporters.length > 0 && this.upgraders.length < 5) {
+
+            let totalLeftoverEnergy: number = 0;
+            if (this.StashMgr.controllerContainer != undefined) {
+                let leftoverControllerEnergy = this.getLeftoverControllerEnergy();
+                totalLeftoverEnergy = leftoverControllerEnergy;
+                //console.log('Leftover Controller Energy: ' + leftoverControllerEnergy);
             }
             else {
-                body = this.baseRoomSpawn.createWorkerBody(2, 4, 6, [CARRY, MOVE, WORK], false)
+                let leftoverSpawnEnergy = this.getLeftoverSpawnEnergy();
+                totalLeftoverEnergy = leftoverSpawnEnergy;
+                //console.log('Leftover Spawn Energy: ' + leftoverSpawnEnergy);
             }
 
-            this.baseRoomSpawn.spawnUpgrader(body);
+            //let totalLeftoverEnergy = leftoverControllerEnergy + leftoverSpawnEnergy;
+
+
+            let body: string[] = this.baseRoomSpawn.createWorkerBody(2, 4, 6, [CARRY, MOVE, WORK], false)
+
+            let newCreepCarryCapacity: number = 0;
+            for (let part of body) {
+                if (part == CARRY) {
+                    newCreepCarryCapacity += 50;
+                }
+            }
+            //console.log('New Upgrader Capacity: ' + newCreepCarryCapacity);
+            if (totalLeftoverEnergy >= newCreepCarryCapacity) {
+                console.log('Total Leftover Energy: ' + totalLeftoverEnergy);
+                this.baseRoomSpawn.spawnUpgrader(body);
+                return true;
+            }
         }
+        return false;
     }
 
-    spawnNeededBuilders() {
-        let generalBuilders = this.builders.filter(builder => {
-            return builder.memory.PrioritySiteID == "0";
-        })
-        let priorityBuilders = this.builders.filter(builder => {
-            return builder.memory.PrioritySiteID != "0";
-        })
-        // console.log('general builders: ' + generalBuilders.length);
-        // console.log('priority builders: ' + priorityBuilders.length);
-        // console.log('total builders: ' + this.builders.length);
+    spawnNeededBuilders(): Boolean {
         if (this.constructionSites.length > 0) {
-            for (let conSite of this.StashMgr.containerConstructionSites) {
 
-                let buildersTargetingSite = this.builders.filter(builder => {
-                    return builder.memory.PrioritySiteID == conSite.id;
-                })
-                if (buildersTargetingSite.length < 2) {
-                    this.baseRoomSpawn.spawnBuilder(conSite.id);
-                    return;
+            let generalBuilders = this.builders.filter(builder => {
+                return builder.memory.PrioritySiteID == "0";
+            })
+            let priorityBuilders = this.builders.filter(builder => {
+                return builder.memory.PrioritySiteID != "0";
+            })
+
+            // console.log('General Builders: ' + generalBuilders.length);
+            // console.log('Priority Builders: ' + priorityBuilders.length);
+
+            let leftoverSpawnEnergy = this.getLeftoverSpawnEnergy();
+
+            let body: string[] = this.baseRoomSpawn.createWorkerBody(2, 3, 5, [CARRY, MOVE, WORK], false);
+
+            let newCreepCarryCapacity: number = 0;
+            for (let part of body) {
+                if (part == CARRY) {
+                    newCreepCarryCapacity += 50;
                 }
             }
 
-            if (priorityBuilders.length < 6 && generalBuilders.length < 3) {
-                this.baseRoomSpawn.spawnBuilder("0");
-                return;
+            // If we have enough leftover energy to justify a new builder
+            if (leftoverSpawnEnergy >= newCreepCarryCapacity) {
+                for (let conSite of this.StashMgr.containerConstructionSites) {
+
+                    let buildersTargetingSite = this.builders.filter(builder => {
+                        return builder.memory.PrioritySiteID == conSite.id;
+                    })
+                    if (buildersTargetingSite.length < 2) {
+                        console.log('Total Leftover Energy: ' + leftoverSpawnEnergy);
+                        this.baseRoomSpawn.spawnBuilder(conSite.id);
+                        return true;
+                    }
+                }
+
+                if (priorityBuilders.length < 6 && generalBuilders.length < 3) {
+                    console.log('Total Leftover Energy: ' + leftoverSpawnEnergy);
+                    this.baseRoomSpawn.spawnBuilder("0");
+                    return true;
+                }
             }
         }
+        return false;
     }
 
     distanceTo(creep: Creep, pos: RoomPosition): number {
@@ -254,5 +294,113 @@ export class RoomMgr {
         }
 
         return boxPositions;
+    }
+
+    getLeftoverSpawnEnergy() {
+
+        let leftoverSpawnContainerEnergy: number = 0;
+        // Get the amount of energy available in the spawn container
+        let spawnContainer: Container = this.StashMgr.spawnContainer;
+        if (spawnContainer != undefined) {
+            let spawnContainerEnergy: number = 0;
+            spawnContainerEnergy = spawnContainer.store[RESOURCE_ENERGY];
+
+            if (spawnContainerEnergy > 0) {
+                // Get all creeps who want to collect from the spawn container
+                let spawnContainerCollectors: Creep[] = [];
+                for (let creep of this.creeps) {
+                    if (creep.memory.CollectionTargetID == spawnContainer.id) {
+                        spawnContainerCollectors.push(creep);
+                    }
+                }
+
+                let collectorCapacity: number = 0;
+                for (let creep of spawnContainerCollectors) {
+                    collectorCapacity += creep.carryCapacity;
+                }
+
+                leftoverSpawnContainerEnergy = spawnContainerEnergy - collectorCapacity;
+            }
+        }
+
+        let leftoverDroppedSpawnEnergy: number = 0;
+        // Get the amount of dropped energy at the spawn container location
+        let dropPosition = this.StashMgr.getSpawnContainerPos();
+        let [energyFound] = this.baseRoom.lookForAt(RESOURCE_ENERGY, dropPosition);
+        if (energyFound != undefined) {
+            let droppedSpawnEnergy: number = energyFound.amount;
+
+            // Get all creeps who want to collect this dropped energy
+            let droppedEnergyCollectors: Creep[] = [];
+            for (let creep of this.creeps) {
+                if (creep.memory.CollectionTargetID == energyFound.id) {
+                    droppedEnergyCollectors.push(creep);
+                }
+            }
+
+            let collectorCapacity: number = 0;
+            for (let creep of droppedEnergyCollectors) {
+                collectorCapacity += creep.carryCapacity;
+            }
+
+            leftoverDroppedSpawnEnergy = droppedSpawnEnergy - collectorCapacity;
+        }
+
+        let totalLeftoverSpawnEnergy = leftoverSpawnContainerEnergy + leftoverDroppedSpawnEnergy;
+        return totalLeftoverSpawnEnergy;
+    }
+
+    getLeftoverControllerEnergy() {
+
+        let leftoverControllerContainer: number = 0;
+        // Get the amount of energy available in the controller container
+        let controllerContainer: Container = this.StashMgr.controllerContainer;
+        if (controllerContainer != undefined) {
+            let controllerContainerEnergy: number = 0;
+            controllerContainerEnergy = controllerContainer.store[RESOURCE_ENERGY];
+
+            if (controllerContainerEnergy > 0) {
+                // Get all upgraders who want to collect from the spawn container
+                let controllerContainerCollectors: Creep[] = [];
+                for (let creep of this.upgraders) {
+                    if (creep.memory.CollectionTargetID == controllerContainer.id) {
+                        controllerContainerCollectors.push(creep);
+                    }
+                }
+
+                let collectorCapacity: number = 0;
+                for (let creep of controllerContainerCollectors) {
+                    collectorCapacity += creep.carryCapacity;
+                }
+
+                leftoverControllerContainer = controllerContainerEnergy - collectorCapacity;
+            }
+        }
+
+        let leftoverDroppedControllerEnergy: number = 0;
+        // Get the amount of dropped energy at the spawn container location
+        let dropPosition = this.StashMgr.getControllerContainerPos();
+        let [energyFound] = this.baseRoom.lookForAt(RESOURCE_ENERGY, dropPosition);
+        if (energyFound != undefined) {
+            let droppedControllerEnergy: number = energyFound.amount;
+
+            // Get all upgraders who want to collect this dropped energy
+            let droppedEnergyCollectors: Creep[] = [];
+            for (let creep of this.upgraders) {
+                if (creep.memory.CollectionTargetID == energyFound.id) {
+                    droppedEnergyCollectors.push(creep);
+                }
+            }
+
+            let collectorCapacity: number = 0;
+            for (let creep of droppedEnergyCollectors) {
+                collectorCapacity += creep.carryCapacity;
+            }
+
+            leftoverDroppedControllerEnergy = droppedControllerEnergy - collectorCapacity;
+        }
+
+        let totalLeftoverSpawnEnergy = leftoverControllerContainer + leftoverDroppedControllerEnergy;
+        return totalLeftoverSpawnEnergy;
     }
 }

@@ -36,8 +36,8 @@ export class Colony {
     }
 
     public runColony() {
-        this._roomManager.runRooms();
         this.creepManager.runCreeps();
+        this._roomManager.runRooms();
 
     }
 }

@@ -54,9 +54,9 @@ export function spawnPrototypes() {
             }
         }
 
-        console.log('Energy Required: ' + energyRequired);
-        console.log('Energy Available: ' + energyAvailable);
-        console.log('Energy Capacity: ' + this.room.energyCapacityAvailable);
+        // console.log('Energy Required: ' + energyRequired);
+        // console.log('Energy Available: ' + energyAvailable);
+        // console.log('Energy Capacity: ' + this.room.energyCapacityAvailable);
 
         // If we created a body that is impossible to spawn with the current capacity of the room,
         // remove a part until we are under the limit
@@ -84,20 +84,32 @@ export function spawnPrototypes() {
         while (energyRequired < energyAvailable);
 
         // Remove pairs of balanced parts if we went over our room limit
-        do {
+        while (energyRequired > this.room.energyCapacityAvailable) {
             for (let part of balanceParts) {
                 body.pop();
                 energyRequired -= BODYPART_COST[part];
             }
         }
-        while (energyRequired > this.room.energyCapacityAvailable);
+
+        // console.log('Energy Required: ' + energyRequired);
+        // console.log('Energy Available: ' + this.room.energyAvailable);
+        // console.log('Energy Capacity: ' + this.room.energyCapacityAvailable);
 
         return body;
     }
 
     StructureSpawn.prototype.spawnHarvester = function(targetSource: Source): number {
 
-        let body: string[] = this.createWorkerBody(5, 2, 1, [WORK, CARRY, MOVE], false);
+        let body: string[];
+        if (targetSource.transporterCount > 0) {
+            body = this.createWorkerBody(6, 2, 1, [WORK, CARRY, MOVE], false);
+        }
+        else if (targetSource.creepsTargeting.length == 0) {
+            body = this.createWorkerBody(1, 1, 2, [MOVE, WORK, CARRY], false);
+        }
+        else {
+            body = this.createWorkerBody(2, 1, 1, [WORK, CARRY, MOVE], false);
+        }
         console.log('Harvester Body generated: ' + body.toString());
 
         let spawnHarvesterOpts = {
