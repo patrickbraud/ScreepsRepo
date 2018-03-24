@@ -1,5 +1,4 @@
-import { SpawnManager } from "Globals/SpawnManager";
-import { GlobalValues } from "Globals/GlobalValues";
+//import { GlobalValues } from "Globals/GlobalValues";
 import { Colony } from "Colony";
 
 export namespace GameManager {
@@ -7,13 +6,12 @@ export namespace GameManager {
     export var colonyCount: number;
     export var colonies: Colony[];
 
-    export function SetGlobals() {
-        SpawnManager.loadSpawns();
-
-        console.log('Global Values Loaded');
-    }
+    export var spawns: {[spawnName: string]: StructureSpawn};
+    export var spawnNames: string[];
+    export var spawnCount: number;
 
     export function Start() {
+        loadSpawns();
         // Load all of our colonies
         loadColonies();
         console.log('Colonies: ' + colonies.length);
@@ -25,10 +23,26 @@ export namespace GameManager {
 
     function loadColonies() {
         colonies = [];
-        colonyCount = GlobalValues.spawnCount;
-        for(let name in GlobalValues.spawns) {
+        colonyCount = spawnCount;
+        for(let name in spawns) {
             let spawn = Game.spawns[name];
             colonies.push(new Colony(spawn));
+        }
+    }
+
+    function loadSpawns() {
+        spawns = Game.spawns;
+        spawnCount = _.size(spawns);
+
+        loadSpawnNames();
+    }
+
+    function loadSpawnNames() {
+        spawnNames = [];
+        for (let spawnName in spawns) {
+            if (spawns.hasOwnProperty(spawnName)) {
+                spawnNames.push(spawnName);
+            }
         }
     }
 }

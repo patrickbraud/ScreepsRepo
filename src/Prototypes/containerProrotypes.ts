@@ -5,7 +5,7 @@ export function containerPrototypes() {
         let connectedSource: Source;
         // Find the source for this container
         for (let sourceContainer of sourceContainers) {
-            if (sourceContainer.container == this.id) {
+            if (sourceContainer.container.id == this.id) {
                 connectedSource = sourceContainer.source;
                 break;
             }

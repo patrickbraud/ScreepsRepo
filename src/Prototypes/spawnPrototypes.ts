@@ -18,10 +18,17 @@ export function spawnPrototypes() {
             body.push(MOVE);
         }
         let moveCount = body.length - carryCount - workCount;
-
         let energyRequired = (BODYPART_COST.work * moveCount)
                              + (BODYPART_COST.carry * carryCount)
                              + (BODYPART_COST.move * moveCount);
+
+        // Make sure we always make at least a 300 min cost body
+        while (energyRequired < 300) {
+            body.push(priority[0]);
+            energyRequired += BODYPART_COST[priority[0]];
+        }
+
+        let baseBodyLength = body.length;
 
         let energyAvailable = this.room.energyAvailable;
 
@@ -65,27 +72,33 @@ export function spawnPrototypes() {
             energyRequired -= BODYPART_COST[part];
         }
 
+        if (!waitForMax) {
+            while (energyRequired > energyAvailable && body.length > baseBodyLength) {
+                let part = body.pop();
+                energyRequired -= BODYPART_COST[part];
+            }
+        }
         return body;
     };
 
-    StructureSpawn.prototype.createBalancedBody = function(balanceParts: string[], waitForMax: Boolean): string[] {
+    StructureSpawn.prototype.createBalancedBody = function(balanceParts: string[], maxPairs: number,  waitForMax: Boolean): string[] {
 
         let body: string[] = [];
         let energyRequired = 0;
         let energyAvailable = waitForMax ? this.room.energyCapacityAvailable : this.room.energyAvailable;
 
         // Build the largest body we can make with our current energy
-        do {
+        for (let pair = 0; pair < maxPairs && energyRequired < energyAvailable; pair++) {
+
             for (let part of balanceParts) {
                 body.push(part);
                 energyRequired += BODYPART_COST[part];
             }
         }
-        while (energyRequired < energyAvailable);
 
         // Remove pairs of balanced parts if we went over our room limit
         while (energyRequired > this.room.energyCapacityAvailable) {
-            for (let part of balanceParts) {
+            for (let part of balanceParts.reverse()) {
                 body.pop();
                 energyRequired -= BODYPART_COST[part];
             }
@@ -100,16 +113,22 @@ export function spawnPrototypes() {
 
     StructureSpawn.prototype.spawnHarvester = function(targetSource: Source): number {
 
+        let harvesters = targetSource.harvesters;
+        let transporters = targetSource.transporters;
         let body: string[];
-        if (targetSource.transporterCount > 0) {
-            body = this.createWorkerBody(6, 2, 1, [WORK, CARRY, MOVE], false);
+        if (harvesters.length == 0 && transporters.length == 0) {
+            // starting over from scratch
+            body = this.createWorkerBody(1, 2, 2, [WORK, MOVE, CARRY], false);
         }
-        else if (targetSource.creepsTargeting.length == 0) {
-            body = this.createWorkerBody(1, 1, 2, [MOVE, WORK, CARRY], false);
+        else if (harvesters.length == 0 && transporters.length == 1) {
+            body = this.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], false);
         }
-        else {
-            body = this.createWorkerBody(2, 1, 1, [WORK, CARRY, MOVE], false);
+        else /*if (harvesters.length == 1 && transporters.length == 0)*/ {
+            body = this.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], true)
         }
+
+
+        // }
         console.log('Harvester Body generated: ' + body.toString());
 
         let spawnHarvesterOpts = {
@@ -135,7 +154,7 @@ export function spawnPrototypes() {
 
     StructureSpawn.prototype.spawnTransporter = function(targetSource: Source): number {
 
-        let body: string[] = this.createBalancedBody([CARRY, MOVE], true);
+        let body: string[] = this.createBalancedBody([CARRY, MOVE], 6, true);
         console.log('Transporter Body generated ' + body.toString());
 
         let spawnTransporterOpts = {

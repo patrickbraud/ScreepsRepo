@@ -1,5 +1,5 @@
 import { RoomMgr } from "./RoomMgr";
-import { Screep } from "Creeps/Screep";
+//import { Screep } from "Creeps/Screep";
 import { CreepStatus } from "Enums/CreepEnums";
 
 export class SourceMgr {
@@ -11,14 +11,12 @@ export class SourceMgr {
     constructor(roomMgr: RoomMgr) {
         this._roomManager = roomMgr;
 
-        // Later, return sources in other rooms around our base as well
         this.sources = this._roomManager.baseRoom.sourcesInRoom;
     }
 
     spawnNeededHarvesters(): Boolean {
         for (let source of this.sources) {
             if (source.harvesterWorkCount < 5 && source.harvesterCount < source.maxCreepCount) {
-                // let neededWorkParts = 5 - source.harvesterWorkCount;
                 this._roomManager.baseRoomSpawn.spawnHarvester(source);
                 return true;
             }
@@ -29,14 +27,20 @@ export class SourceMgr {
     spawnNeededTransporters(): Boolean {
         for (let source of this.sources) {
             // Only spawn transporters if we have
-            if (source.harvesterCount > 0) {
+            if (source.harvesterCount > 0 && source.transporterCount < 5) {
+
+                // We have max harvesters, but no transporters. Spawn one no matter what
+                if (source.harvesterWorkCount >= 5 && source.transporterCount == 0) {
+                    this._roomManager.baseRoomSpawn.spawnTransporter(source);
+                    return true;
+                }
 
                 let body: string[];
-                if (source.transporterCount <= 1) {
-                    body = this._roomManager.baseRoomSpawn.createBalancedBody([CARRY, MOVE], false);
+                if (source.transporterCount == 0) {
+                    body = this._roomManager.baseRoomSpawn.createBalancedBody([CARRY, MOVE], 6, false);
                 }
                 else {
-                    body = this._roomManager.baseRoomSpawn.createBalancedBody([CARRY, MOVE], true);
+                    body = this._roomManager.baseRoomSpawn.createBalancedBody([CARRY, MOVE], 6, true);
                 }
                 let newCreepCarryCapacity: number = 0;
                 for (let part of body) {
@@ -48,6 +52,7 @@ export class SourceMgr {
                 let sourceContainer = this._roomManager.StashMgr.getContainerForSource(source);
                 let leftoverDroppedEnergy = this.getLeftoverDroppedEnergyForSource(source);
                 let leftoverContainerEnergy = this.getLeftoverEnergyForContainer(sourceContainer);
+                // console.log('Leftover Container Energy: ' + leftoverContainerEnergy + ' - ' + source.pos);
                 // console.log('Leftover Dropped Energy: ' + leftoverDroppedEnergy);
                 // console.log('Leftover Container Energy: ' + leftoverContainerEnergy);
                 let totalLeftoverEnergy = leftoverDroppedEnergy + leftoverContainerEnergy;
@@ -72,25 +77,6 @@ export class SourceMgr {
         return targetSource;
     }
 
-    getBestSource(screep: Screep): Source {
-        // Get all of the sources in the same room as the creep
-        let sourcesInRoom = this.sources.filter( src => src.room.name == screep.creep.room.name );
-        // console.log('Sources in Room');
-        // console.log(sourcesInRoom);
-
-        // Keep only the sources that have less creeps targeting them than the source has valid spaces to harvest from
-        let openSources: Source[] = sourcesInRoom.filter( src => src.creepsTargeting.length < src.maxCreepCount );
-        // console.log('Open Sources');
-        // console.log(openSources);
-
-        // Order the sources by linear distance to the creep
-        let orderedSources: Source[] = openSources.sort(function (a, b) {return screep.distanceTo(a.pos) - screep.distanceTo(b.pos); });
-        // console.log('Ordered Sources');
-        // console.log(orderedSources);
-
-        return orderedSources[0];
-    }
-
     getLeftoverEnergyForContainer(container: Container) {
 
         let leftOverEnergy: number = 0;
@@ -98,9 +84,9 @@ export class SourceMgr {
             // See how much energy is left over after counting for all transporters that need energy for this source
             // Get all of the transporters for this source/container
             let containerTransporters: Creep[] = container.transportersForContainer(this._roomManager.transporters, this._roomManager.StashMgr.sourceContainers)
-            // Keep only the transporters that are currently collecting (looking for energy)
+            // Keep only the transporters that are currently collecting from this container
             containerTransporters.filter(transporter => {
-                return transporter.memory.Status == CreepStatus.Collecting;
+                return transporter.memory.CollectionTargetID == container.id;
             })
 
             let currentlyCollectingCapacity: number = 0;
@@ -126,7 +112,7 @@ export class SourceMgr {
             })
             // Keep only the transporters that are currently collecting (looking for energy)
             sourceTransporters = sourceTransporters.filter(transporter => {
-                return transporter.memory.Status == CreepStatus.Collecting;
+                return transporter.memory.CollectionTargetID == CreepStatus.Collecting;
             })
 
             let currentlyCollectingCapacity: number = 0;

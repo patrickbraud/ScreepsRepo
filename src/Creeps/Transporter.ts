@@ -1,6 +1,7 @@
 import { Screep } from "./Screep";
 import { CreepStatus } from "Enums/CreepEnums";
 import { RoomMgr } from "Mgrs/RoomMgr";
+import { RoomUtils } from "Mgrs/RoomUtils";
 
 export class Transporter extends Screep{
 
@@ -23,17 +24,17 @@ export class Transporter extends Screep{
         this.creep.memory.TargetContainerID = targetID;
     }
 
-    // private _collectionTargetID;
-    // get CollectionTargetID(): string {
-    //     return this._collectionTargetID;
-    // }
-    // set CollectionTargetID(collectionID: string) {
-    //     if (collectionID == undefined) {
-    //         collectionID = "0";
-    //     }
-    //     this._collectionTargetID = collectionID;
-    //     this.creep.memory.CollectionTargetID = this._collectionTargetID;
-    // }
+    private _collectionTargetID;
+    get CollectionTargetID(): string {
+        return this._collectionTargetID;
+    }
+    set CollectionTargetID(collectionID: string) {
+        if (collectionID == undefined) {
+            collectionID = "0";
+        }
+        this._collectionTargetID = collectionID;
+        this.creep.memory.CollectionTargetID = this._collectionTargetID;
+    }
 
     private _targetSource: Source;
     private _targetContainer: Container;
@@ -58,6 +59,7 @@ export class Transporter extends Screep{
     work() {
         // If we are Collecting and we are full
         if(this.Status == CreepStatus.Collecting && this.creep.carry.energy == this.creep.carryCapacity) {
+            this.CollectionTargetID = "0";
             this.Status = CreepStatus.Transporting;
             this.creep.say('🚚');
         }
@@ -118,8 +120,9 @@ export class Transporter extends Screep{
         //   - withdraw from our source's harvesters
         else if (this.Status == CreepStatus.Collecting) {
             // * check for dropped energy around source
-            let foundEnergy = super.checkForDroppedEnergy(RoomMgr.validPositions(this._targetSource, ['wall']));
+            let foundEnergy = super.checkForDroppedEnergy(this._targetSource.pos);
             if (foundEnergy != undefined) {
+                this.CollectionTargetID = foundEnergy.id;
                 super.pickUpEnergy(foundEnergy);
                 return;
             }
@@ -127,7 +130,8 @@ export class Transporter extends Screep{
             // * if our source DOES has a container
             //   - withdraw from container
             if (this._targetContainer != undefined) {
-                this.collectFromStructure(this._targetContainer);
+                this.CollectionTargetID = this._targetContainer.id;
+                this.collectFromContainer(this._targetContainer);
                 return;
             }
             // * if our source DOES NOT have a container
@@ -151,7 +155,7 @@ export class Transporter extends Screep{
     }
 
     blockingHarvesterSpot(source: Source): Boolean {
-        let validSourcePositions = RoomMgr.validPositions(source, ['wall']);
+        let validSourcePositions = RoomUtils.validPositions(source, ['wall']);
         for (let pos of validSourcePositions) {
             if (pos.isEqualTo(this.creep.pos)) {
                 this.creep.say('Blocking');
@@ -172,6 +176,16 @@ export class Transporter extends Screep{
         }
     }
 
+    // depositToContainer(container: Container) {
+    //     if (container.hits < container.hitsMax) {
+    //         this.creep.say('🔨repair')
+    //         this.repairContainer(container);
+    //     }
+    //     else {
+    //         this.deposit(container);
+    //     }
+    // }
+
     transferToCreep(creep: Creep) {
         let transferResult = this.creep.transfer(creep, RESOURCE_ENERGY);
         if (transferResult == ERR_NOT_IN_RANGE) {
@@ -179,11 +193,13 @@ export class Transporter extends Screep{
         }
     }
 
-    collectFromStructure(target: Container | Extension | Spawn) {
-        let withdrawResult = this.creep.withdraw(target, RESOURCE_ENERGY);
-        if (withdrawResult == ERR_NOT_IN_RANGE) {
-            super.moveTo(target, this.pathColor);
-        }
+    collectFromContainer(target: Container) {
+        //if (target.store[RESOURCE_ENERGY] >= this.creep.carryCapacity) {
+            let withdrawResult = this.creep.withdraw(target, RESOURCE_ENERGY);
+            if (withdrawResult == ERR_NOT_IN_RANGE) {
+                super.moveTo(target, this.pathColor);
+            }
+        //}
     }
 
     collectFromHarvester(target: Creep) {

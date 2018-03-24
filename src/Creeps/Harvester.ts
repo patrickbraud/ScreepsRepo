@@ -58,8 +58,7 @@ export class Harvester extends Screep {
             // * if we have a container
             if (sourceContainer != undefined && transportersForSource.length > 0) {
                 //   - (repair if necessary and not empty)
-                if (sourceContainer.hits < sourceContainer.hitsMax
-                    /*&& sourceContainer.store[RESOURCE_ENERGY] > 0*/) {
+                if (sourceContainer.hits < sourceContainer.hitsMax) {
                     this.creep.say('🔨repair')
                     this.repairContainer(sourceContainer);
                     return;

@@ -1,0 +1,38 @@
+
+Energy Input / Tick
+
+Harvester - 2 energy / WORK / Tick
+          - 5 WORK target per source
+
+ = +10 energy / Tick / Source
+
+
+Energy Output / Tick
+
+Build - 5 energy / WORK / Tick
+
+Repair - 1 energy / WORK / Tick
+
+Upgrade - 1 energy / WORK / Tick
+
+
+Output Limits (2 source room, +20)
+
+Targets (individually):
+Build: 15
+Upgrade: 10
+Repair: 5
+
+construction sites present
+Build: 15 (3 * WORK)
+Upgrade: 2 (2 * WORK)
+Repair: 1 (1 * WORK)
+Surplus: +2 / tick
+
+no construction sites present
+Build: 0
+Upgrade: 15 (15 * WORK)
+Repair: 2 (2 * WORK)
+Surplus: +3 / tick
+
+

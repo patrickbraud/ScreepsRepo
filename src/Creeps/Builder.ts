@@ -86,15 +86,12 @@ export class Builder extends Screep {
         // * Check for dropped energy around the spawn drop position
         // * if the room spawn DOES have a container
         // 	 - collect from spawn container if it has energy
-        // * check for dropped energy at sources
-        // * if we have source containers
-        // 	 - collect from source container if it has energy
         // * move to spawn area and wait
         else if (this.Status == CreepStatus.Collecting) {
 
             // * Check for dropped energy around the spawn drop position
             let dropPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
-            let spawnDropEnergy = this.checkForDroppedEnergy(RoomMgr.validPositions(dropPosition, ['wall']));
+            let spawnDropEnergy = this.checkForDroppedEnergy(dropPosition);
             if (spawnDropEnergy != undefined) {
                 this.CollectionTargetID = spawnDropEnergy.id;
                 this.pickUpEnergy(spawnDropEnergy);
@@ -110,36 +107,6 @@ export class Builder extends Screep {
                 return;
             }
 
-            // // * check for dropped energy at sources
-            // let closestSources = this.roomMgr.sourceMgr.sources.sort((a: Source, b: Source): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
-            // for (let source of closestSources) {
-            //     let foundEnergy = this.checkForDroppedEnergy(RoomMgr.validPositions(source, ['wall']));
-            //     if (foundEnergy != undefined) {
-            //         this.CollectionTargetID = foundEnergy.id;
-            //         this.pickUpEnergy(foundEnergy);
-            //         return;
-            //     }
-            // }
-
-            // // * if we have source containers
-            // if (this.roomMgr.StashMgr.sourceContainers.length > 0) {
-            //     let sourceContainersWithEnergy: Container[] = [];
-            //     for (let srcCont of this.roomMgr.StashMgr.sourceContainers) {
-            //         // if it has energy
-            //         if (srcCont.container.store[RESOURCE_ENERGY] > 0) {
-            //             sourceContainersWithEnergy.push(srcCont.container);
-            //         }
-            //     }
-            //     // if we have source containers with energy
-            //     if (sourceContainersWithEnergy.length > 0) {
-            //     let closestSourceContainers: Container[] = sourceContainersWithEnergy.sort((a: Container, b: Container): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
-            //         // 	 - collect from source container if it has energy
-            //         this.CollectionTargetID = closestSourceContainers[0].id;
-            //         this.collectFromStructure(closestSourceContainers[0]);
-            //         return;
-            //     }
-            // }
-
             // * move to spawn area and wait
             // let spawnDropPosition: RoomPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
             // this.moveToSpawnDropArea(spawnDropPosition);
@@ -153,13 +120,13 @@ export class Builder extends Screep {
         let droppedEnergy: Resource[] = [];
 
         let dropPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
-        let spawnDropEnergy = this.checkForDroppedEnergy(RoomMgr.validPositions(dropPosition, ['wall']));
+        let spawnDropEnergy = this.checkForDroppedEnergy(dropPosition);
         if (spawnDropEnergy != undefined) {
             droppedEnergy.push(spawnDropEnergy);
         }
 
         for (let source of this.roomMgr.sourceMgr.sources) {
-            let foundEnergy = this.checkForDroppedEnergy(RoomMgr.validPositions(source, ['wall']));
+            let foundEnergy = this.checkForDroppedEnergy(source.pos);
             if (foundEnergy != undefined) {
                 droppedEnergy.push(foundEnergy);
             }

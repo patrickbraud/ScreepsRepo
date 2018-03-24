@@ -1,4 +1,5 @@
 import { RoomMgr } from "./RoomMgr";
+import { RoomUtils } from "./RoomUtils";
 
 export class StashMgr {
 
@@ -30,47 +31,16 @@ export class StashMgr {
         this.containerConstructionSites = this._roomMgr.getConstructionSitesOfType(STRUCTURE_CONTAINER);
 
         if (this.containers.length > 0 || this.containerConstructionSites.length > 0) {
+            // Load any container or container construction sites around our sources
             for (let source of this._roomMgr.sourceMgr.sources) {
-
-                let containerFound: Container;
-                let containerConstructionFound: ConstructionSite;
-                let validPositions = RoomMgr.validPositions(source, ['wall']);
-
-                if (validPositions.length > 0) {
-                    for (let pos of validPositions) {
-
-                        if (this.containers.length > 0) {
-                            // Check if this source has a container around it
-                            containerFound = this.containers.find(container => {
-                                return container.pos.isEqualTo(pos);
-                            });
-                            if (containerFound) {
-                                let sourceContainer = {
-                                    container: containerFound,
-                                    source: source
-                                }
-                                this.sourceContainers.push(sourceContainer)
-                                break;
-                            }
-                        }
-
-                        if (this.containerConstructionSites.length > 0) {
-                            // Check if this source has any container construction sites around it
-                            containerConstructionFound = this.containerConstructionSites.find(consite => {
-                                return consite.pos.isEqualTo(pos);
-                            });
-                            if (containerConstructionFound) {
-                                let sourceConSite = {
-                                    conSite: containerConstructionFound,
-                                    source: source
-                                }
-                                this.sourceContainerConSites.push(sourceConSite);
-                                break;
-                            }
-                        }
-                    }
-                }
+                this.loadSourceStash(source);
             }
+
+            // Load our spawn/controller containers or container construction sites
+            // If they doesn't exist, load the best position for them as a drop point
+            this.loadSpawnStash(this._roomMgr.baseRoomSpawn);
+            this.loadControllerStash(this._roomMgr.baseRoomController);
+
         }
     }
 
@@ -92,10 +62,18 @@ export class StashMgr {
                     });
 
                     if (hasConSite == undefined) {
-                        let conSitePos = this._getBestSourceContainerPos(RoomMgr.validPositions(source, ['wall']));
+                        let conSitePos = this._getBestSourceContainerPos(RoomUtils.validPositions(source, ['wall']));
                         source.room.createConstructionSite(conSitePos, STRUCTURE_CONTAINER);
                     }
                 }
+            }
+
+            if (this.spawnContainer == undefined && this.spawnContainerConSite == undefined) {
+                this._roomMgr.baseRoom.createConstructionSite(this.spawnEnergyDropPosition, STRUCTURE_CONTAINER);
+            }
+
+            if (this.controllerContainer == undefined && this.controllerContainerConSite == undefined) {
+                this._roomMgr.baseRoom.createConstructionSite(this.controllerContainerPosition, STRUCTURE_CONTAINER);
             }
         }
     }
@@ -107,11 +85,6 @@ export class StashMgr {
         else if (this.spawnContainerConSite != undefined) {
             return this.spawnContainerConSite.pos;
         }
-        else if (this.spawnEnergyDropPosition != undefined) {
-            return this.spawnEnergyDropPosition;
-        }
-
-        this.spawnEnergyDropPosition = new RoomPosition(this._roomMgr.baseRoomSpawn.pos.x, this._roomMgr.baseRoomSpawn.pos.y + 4, this._roomMgr.baseRoomSpawn.room.name);
 
         return this.spawnEnergyDropPosition;
     }
@@ -123,16 +96,153 @@ export class StashMgr {
         else if (this.controllerContainerConSite != undefined) {
             return this.controllerContainerConSite.pos;
         }
+        else if (this.controllerContainerPosition != undefined) {
+            return this.controllerContainerPosition;
+        }
 
-        let possibleContainerPositions = RoomMgr.getBoxPositions(3, this._roomMgr.baseRoomController.pos);
+        let possibleContainerPositions = RoomUtils.getBoxPositions(3, this._roomMgr.baseRoomController.pos);
         for (let pos of possibleContainerPositions) {
-            if (!RoomMgr.positionIsTerrainType(pos, 'wall') && RoomMgr.validPositions(pos, ['wall']).length >= 7) {
+            if (!RoomUtils.positionIsTerrainType(pos, 'wall') && RoomUtils.validPositions(pos, ['wall']).length >= 7) {
                 this.controllerContainerPosition = pos;
                 break;
             }
         }
 
         return this.controllerContainerPosition;
+    }
+
+    loadSourceStash(source: Source) {
+        let containerFound: Container;
+        let containerConstructionFound: ConstructionSite;
+        let validPositions = RoomUtils.validPositions(source, ['wall']);
+
+        if (validPositions.length > 0) {
+            // check each possible container postion around the source
+            for (let pos of validPositions) {
+
+                if (this.containers.length > 0) {
+                    // Check if this source has a container around it
+                    containerFound = this.containers.find(container => {
+                        return container.pos.isEqualTo(pos);
+                    });
+                    if (containerFound) {
+                        let sourceContainer = {
+                            container: containerFound,
+                            source: source
+                        }
+                        this.sourceContainers.push(sourceContainer)
+                        break;
+                    }
+                }
+
+                if (this.containerConstructionSites.length > 0) {
+                    // Check if this source has any container construction sites around it
+                    containerConstructionFound = this.containerConstructionSites.find(consite => {
+                        return consite.pos.isEqualTo(pos);
+                    });
+                    if (containerConstructionFound) {
+                        let sourceConSite = {
+                            conSite: containerConstructionFound,
+                            source: source
+                        }
+                        this.sourceContainerConSites.push(sourceConSite);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    loadSpawnStash(spawn: Spawn) {
+
+        let spacesFromCenter = 3;
+        let boxPositions = RoomUtils.getBoxPositions(spacesFromCenter, spawn.pos);
+        // let dot = new RoomVisual(spawn.room.name);
+        // for (let pos of boxPositions) {
+        //     dot.circle(pos, {fill: 'orange'});
+        // }
+
+        // Get a box around the spawn, and keep only the valid positions
+        let validBoxPositions = _.filter(boxPositions, function(pos) { return !RoomUtils.positionIsTerrainType(pos, 'wall') });
+        // Get the closest positions to our sources
+        let closeststashPosition: RoomPosition[] = [];
+        for (let source of this._roomMgr.sourceMgr.sources) {
+             validBoxPositions.sort((a: RoomPosition, b: RoomPosition): number => { return (RoomUtils.distanceTo(a, source.pos) - RoomUtils.distanceTo(b, source.pos))});
+            //dot.circle(validBoxPositions[0], {fill: 'red'});
+            closeststashPosition.push(validBoxPositions[0]);
+        }
+
+        let bestSpawnContainerPos: RoomPosition;
+        if (closeststashPosition.length == 2) {
+            // Get the midpoint between the 2 closest stash positions
+            let midPosition = RoomUtils.midPoint(closeststashPosition[0], closeststashPosition[1]);
+            //dot.circle(midPosition, { fill: 'green' })
+            bestSpawnContainerPos = midPosition;
+        }
+        else {
+            bestSpawnContainerPos = closeststashPosition[0];
+        }
+
+        // If the best position has a container, store it
+        let containerFound = _.find(this.containers, function (container) { return container.pos.isEqualTo(bestSpawnContainerPos) });
+        if (containerFound) {
+            this.spawnContainer = containerFound;
+            this.spawnEnergyDropPosition = this.spawnContainer.pos;
+            return;
+        }
+
+        // If the best position has a container construction site, store that
+        let containerConSiteFound = _.find(this.containerConstructionSites, function (container) { return container.pos.isEqualTo(bestSpawnContainerPos) });
+        if (containerConSiteFound) {
+            this.spawnContainerConSite = containerConSiteFound;
+            this.spawnEnergyDropPosition = this.spawnContainerConSite.pos;
+            return;
+        }
+
+        // otherwise, mark the energy drop off point
+        this.spawnEnergyDropPosition = bestSpawnContainerPos;
+    }
+
+    loadControllerStash(controller: Controller) {
+        let spacesFromCenter = 4;
+        let boxPositions = RoomUtils.getBoxPositions(spacesFromCenter, controller.pos);
+        // let dot = new RoomVisual(controller.room.name);
+        // for (let pos of boxPositions) {
+        //     dot.circle(pos, {fill: 'orange'});
+        // }
+
+        // Get a box around the spawn, and keep only the valid positions
+        let validBoxPositions = _.filter(boxPositions, function(pos) {
+            return !RoomUtils.positionIsTerrainType(pos, 'wall')
+                    && RoomUtils.validPositions(pos, ['wall']).length > 7
+        });
+        // Get the closest positions to our spawn drop point
+        validBoxPositions.sort((a: RoomPosition, b: RoomPosition): number => {
+            return (RoomUtils.distanceTo(a, this.spawnEnergyDropPosition) - RoomUtils.distanceTo(b, this.spawnEnergyDropPosition)
+        )});
+        //dot.circle(validBoxPositions[0], {fill: 'red'});
+
+
+        let bestControllerContainerPos: RoomPosition = validBoxPositions[0];
+
+        // If the best position has a container, store it
+        let containerFound = _.find(this.containers, function (container) { return container.pos.isEqualTo(bestControllerContainerPos) });
+        if (containerFound) {
+            this.controllerContainer = containerFound;
+            this.controllerContainerPosition = this.controllerContainer.pos;
+            return;
+        }
+
+        // If the best position has a container construction site, store that
+        let containerConSiteFound = _.find(this.containerConstructionSites, function (container) { return container.pos.isEqualTo(bestControllerContainerPos) });
+        if (containerConSiteFound) {
+            this.controllerContainerConSite = containerConSiteFound;
+            this.controllerContainerPosition = this.controllerContainerConSite.pos
+            return;
+        }
+
+        // otherwise store the position for use later
+        this.controllerContainerPosition = bestControllerContainerPos;
     }
 
     // Get Container Methods
@@ -205,36 +315,14 @@ export class StashMgr {
         let bestPos = null;
         let maxCount = 0;
         for(let pos of validPositions) {
-            let maxValidPositions = this.validPositionCount(pos, 'wall');
+            //let maxValidPositions = this.validPositionCount(pos, 'wall');
+            let maxValidPositions = RoomUtils.validPositions(pos, ['wall']).length;
             if (bestPos == null || maxValidPositions > maxCount) {
                 bestPos = pos;
                 maxCount = maxValidPositions;
             }
         }
         return bestPos;
-    }
-
-    private validPositionCount(centerPos: RoomPosition, invalidTerrain: string) {
-        let validPositionCount: number = 0;
-         /*
-            x * *
-            * O *
-            * * y
-            Start at the x, end at the y
-        */
-        let currentPos = new RoomPosition(centerPos.x - 1, centerPos.y - 1, centerPos.roomName);
-        for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
-            for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
-                if (!currentPos.isEqualTo(centerPos)) {
-                    let isWall = RoomMgr.positionIsTerrainType(currentPos, invalidTerrain);
-                    if (!isWall) {
-                        validPositionCount++
-                    }
-                }
-            }
-            currentPos.y -= 3;
-        }
-        return validPositionCount;
     }
 }
 

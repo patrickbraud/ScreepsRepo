@@ -39,10 +39,17 @@ export class Upgrader extends Screep{
             this.creep.say('⚙️Collect');
         }
 
+        let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
+        let controllerContainer = this.roomMgr.StashMgr.controllerContainer;
 
         // * Upgrade room controller
         if (this.Status == CreepStatus.Upgrading) {
+            if (controllerContainer != undefined && controllerContainer.hits < controllerContainer.hitsMax) {
+                this.repairContainer(controllerContainer);
+                return;
+            }
             this.upgradeController();
+            return;
         }
         // * if our controller DOES have a container
         //   - collect from container if it has energy
@@ -53,16 +60,16 @@ export class Upgrader extends Screep{
         else if (this.Status == CreepStatus.Collecting) {
 
             // * if our controller DOES have a container
-            let controllerContainer = this.roomMgr.StashMgr.controllerContainer;
-            if (controllerContainer != undefined) {
+            if (controllerContainer != undefined && controllerContainer.store[RESOURCE_ENERGY] > 0) {
                 //   - collect from container
                 this.CollectionTargetID = controllerContainer.id;
                 this.collectFromContainer(controllerContainer);
+                return;
             }
 
             // * Check for dropped energy around the spawn drop position
             let dropPosition: RoomPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
-            let energyFound = this.checkForDroppedEnergy(RoomMgr.validPositions(dropPosition, ['wall']));
+            let energyFound = this.checkForDroppedEnergy(dropPosition);
             if (energyFound != undefined) {
                 this.CollectionTargetID = energyFound.id;
                 this.pickUpEnergy(energyFound);
@@ -70,11 +77,11 @@ export class Upgrader extends Screep{
             }
 
             // * if our spawn DOES have a container
-            let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
             if (spawnContainer != undefined) {
                 //   - collect from container
                 this.CollectionTargetID = spawnContainer.id;
                 this.collectFromContainer(spawnContainer);
+                return;
             }
 
             // * move to spawn area and wait -- TEST: try just waiting
@@ -102,6 +109,13 @@ export class Upgrader extends Screep{
         let upgradeResult = this.creep.transfer(this._targetController, RESOURCE_ENERGY);
         if (upgradeResult == ERR_NOT_IN_RANGE) {
             super.moveTo(this._targetController, this.pathColor);
+        }
+    }
+
+    repairContainer(container: Container) {
+        let repairResult = this.creep.repair(container);
+        if (repairResult == ERR_NOT_IN_RANGE) {
+            super.moveTo(container);
         }
     }
 }

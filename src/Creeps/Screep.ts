@@ -1,5 +1,6 @@
 import { CreepStatus } from "Enums/CreepEnums";
 import { RoomMgr } from "Mgrs/RoomMgr";
+import { RoomUtils } from "Mgrs/RoomUtils";
 
 export class Screep{
 
@@ -90,23 +91,22 @@ export class Screep{
         if (newTarget || gotStuck)
         {
             //console.log('New Target: ' + newTarget);
-            this.updateTarget(target, gotStuck);
+            this.updateTarget(target);
         }
 
         this.moveToTarget();
 
         if (pathColor) {
             // Draw the path from our creep to it's target
-            this.printPath(pathColor);
+            //this.printPath(pathColor);
         }
     }
 
-    updateTarget(target: any, gotStuck: boolean) {
+    updateTarget(target: any) {
         // console.log('Performing FIND Operation');
         this.MoveID = target.id;
 
-        let ignoreAllCreeps = gotStuck ? false : true;
-        this.MovePath = this.creep.room.findPath(this.creep.pos, target.pos, { ignoreCreeps: ignoreAllCreeps });
+        this.MovePath = this.creep.room.findPath(this.creep.pos, target.pos, { ignoreCreeps: false });
     }
 
     printPath(color: string) {
@@ -162,7 +162,8 @@ export class Screep{
         return (pos1.x == pos2.x && pos1.y == pos2.y);
     }
 
-    checkForDroppedEnergy(possiblePositions: RoomPosition[]): Resource{
+    checkForDroppedEnergy(dropPosition: RoomPosition): Resource {
+        let possiblePositions = RoomUtils.validPositions(dropPosition, ['wall']);
         for (let pos of possiblePositions) {
             let energyFound = this.creep.room.lookForAt(LOOK_ENERGY, pos);
             if (energyFound.length > 0) {

@@ -36,6 +36,7 @@ export class Colony {
     }
 
     public runColony() {
+        // Let creeps run first so all targets get set
         this.creepManager.runCreeps();
         this._roomManager.runRooms();
 

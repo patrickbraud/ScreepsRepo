@@ -33,6 +33,8 @@ export class RoomMgr {
         this.loadCreeps();
         this.loadStructures();
 
+        this.loadRoomMemory();
+
         this.sourceMgr = new SourceMgr(this);
         this.StashMgr = new StashMgr(this);
     }
@@ -124,6 +126,10 @@ export class RoomMgr {
         }
     }
 
+    loadRoomMemory() {
+
+    }
+
     spawnNeededUpgraders(): Boolean {
         if (this.transporters.length > 0 && this.upgraders.length < 5) {
 
@@ -161,17 +167,19 @@ export class RoomMgr {
     }
 
     spawnNeededBuilders(): Boolean {
-        if (this.constructionSites.length > 0) {
+        let generalBuilders = this.builders.filter(builder => {
+            return builder.memory.PrioritySiteID == "0";
+        })
+        let priorityBuilders = this.builders.filter(builder => {
+            return builder.memory.PrioritySiteID != "0";
+        })
+        let totalBuilders = priorityBuilders.length + generalBuilders.length;
 
-            let generalBuilders = this.builders.filter(builder => {
-                return builder.memory.PrioritySiteID == "0";
-            })
-            let priorityBuilders = this.builders.filter(builder => {
-                return builder.memory.PrioritySiteID != "0";
-            })
+        if (this.constructionSites.length > 0 && totalBuilders < 5) {
 
             // console.log('General Builders: ' + generalBuilders.length);
             // console.log('Priority Builders: ' + priorityBuilders.length);
+            // console.log('Total Builders: ' + totalBuilders);
 
             let leftoverSpawnEnergy = this.getLeftoverSpawnEnergy();
 
@@ -184,7 +192,7 @@ export class RoomMgr {
                 }
             }
 
-            // If we have enough leftover energy to justify a new builder
+            // If we have enough leftover energy to justify a new builder and we are under our builder limit
             if (leftoverSpawnEnergy >= newCreepCarryCapacity) {
                 for (let conSite of this.StashMgr.containerConstructionSites) {
 
@@ -198,11 +206,11 @@ export class RoomMgr {
                     }
                 }
 
-                if (priorityBuilders.length < 6 && generalBuilders.length < 3) {
+                //if (priorityBuilders.length < 6 && generalBuilders.length < 3) {
                     console.log('Total Leftover Energy: ' + leftoverSpawnEnergy);
                     this.baseRoomSpawn.spawnBuilder("0");
                     return true;
-                }
+                //}
             }
         }
         return false;
@@ -222,78 +230,6 @@ export class RoomMgr {
         return this.constructionSites.filter(site => {
             return site.structureType == type;
         })
-    }
-
-    static validPositions(centerObject: any, invalidTerrain: string[]): RoomPosition[] {
-        let validPositions: RoomPosition[] = [];
-         /*
-            x * *
-            * O *
-            * * y
-            Start at the x, end at the y
-        */
-        let currentPos: RoomPosition;
-        if (centerObject.hasOwnProperty('pos')) {
-            currentPos = new RoomPosition(centerObject.pos.x - 1, centerObject.pos.y - 1, centerObject.pos.roomName);
-        }
-        else {
-            currentPos = new RoomPosition(centerObject.x - 1, centerObject.y - 1, centerObject.roomName);
-        }
-        for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
-            for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
-                if (currentPos != centerObject.pos) {
-
-                    let invalid = false;
-                    for (let terrain of invalidTerrain) {
-                        invalid = RoomMgr.positionIsTerrainType(currentPos, terrain);
-                        if (invalid) { break; }
-                    }
-                    if (!invalid) {
-                        validPositions.push(new RoomPosition(currentPos.x, currentPos.y, currentPos.roomName));;
-                    }
-                }
-            }
-            currentPos.y -= 3;
-        }
-        return validPositions;
-    }
-
-    static positionIsTerrainType(pos: RoomPosition, terrain: string): boolean {
-        let lookResult = Game.rooms[pos.roomName].lookForAt(LOOK_TERRAIN, pos);
-        //console.log('x: ' + pos.x + ' y: ' + pos.y + ' - ' + lookResult.toString() + ' - ' + (lookResult.toString() != 'wall'));
-        return lookResult.toString() == terrain;
-    }
-
-    static getBoxPositions(radiusFromCenter: number, centerPosition: RoomPosition): RoomPosition[] {
-        let edgeLength = radiusFromCenter * 2 + 1;
-
-        let topLeftStart = new RoomPosition(centerPosition.x - radiusFromCenter,
-                                        centerPosition.y - radiusFromCenter,
-                                        centerPosition.roomName);
-        let topRightStart = new RoomPosition(centerPosition.x + radiusFromCenter,
-                                        centerPosition.y - radiusFromCenter,
-                                        centerPosition.roomName);
-        let bottomLeftStart = new RoomPosition(centerPosition.x - radiusFromCenter,
-                                        centerPosition.y + radiusFromCenter,
-                                        centerPosition.roomName);
-        let bottomRightStart = new RoomPosition(centerPosition.x + radiusFromCenter,
-                                        centerPosition.y + radiusFromCenter,
-                                        centerPosition.roomName);
-
-        let boxPositions: RoomPosition[] = [];
-        for(let edgeCount = 0; edgeCount < edgeLength - 1; edgeCount++) {
-            boxPositions.push(topLeftStart);
-            boxPositions.push(topRightStart);
-            boxPositions.push(bottomLeftStart);
-            boxPositions.push(bottomRightStart);
-
-            topLeftStart.x += 1;
-            topRightStart.y += 1;
-            bottomLeftStart.y -= 1;
-            bottomRightStart.x -= 1;
-        }
-
-        return boxPositions;
     }
 
     getLeftoverSpawnEnergy() {
