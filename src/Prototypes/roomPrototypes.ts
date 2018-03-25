@@ -52,4 +52,10 @@ export function roomPrototypes() {
             return this._sourceContainers;
         }
     });
+
+    Object.defineProperty(Room.prototype, 'sourceRoads', {
+        get: function() {
+
+        }
+    });
 }

@@ -1,6 +1,7 @@
 import { RoomMgr } from "./RoomMgr";
 //import { Screep } from "Creeps/Screep";
 import { CreepStatus } from "Enums/CreepEnums";
+import { CreepMgr } from "./CreepMgr";
 
 export class SourceMgr {
 
@@ -12,6 +13,17 @@ export class SourceMgr {
         this._roomManager = roomMgr;
 
         this.sources = this._roomManager.baseRoom.sourcesInRoom;
+
+        for (let source of this.sources) {
+            let draw = new RoomVisual(source.room.name);
+            let roadPath = source.sourceSpawnRoad;
+            for (let step of roadPath) {
+                draw.circle(step.x, step.y, {fill: 'green'});
+            }
+
+            let containerPos = source.containerPos;
+            draw.circle(containerPos, {fill: 'blue'});
+        }
     }
 
     spawnNeededHarvesters(): Boolean {
@@ -55,7 +67,7 @@ export class SourceMgr {
                 // console.log('Leftover Container Energy: ' + leftoverContainerEnergy + ' - ' + source.pos);
                 // console.log('Leftover Dropped Energy: ' + leftoverDroppedEnergy);
                 // console.log('Leftover Container Energy: ' + leftoverContainerEnergy);
-                let totalLeftoverEnergy = leftoverDroppedEnergy + leftoverContainerEnergy;
+                let totalLeftoverEnergy = (leftoverDroppedEnergy + leftoverContainerEnergy) - CreepMgr.bodyCost(body);
                 if (totalLeftoverEnergy >= newCreepCarryCapacity) {
                     console.log('Leftover Source Energy: ' + totalLeftoverEnergy);
                     this._roomManager.baseRoomSpawn.spawnTransporter(source);

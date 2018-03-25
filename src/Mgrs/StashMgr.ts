@@ -35,13 +35,12 @@ export class StashMgr {
             for (let source of this._roomMgr.sourceMgr.sources) {
                 this.loadSourceStash(source);
             }
-
-            // Load our spawn/controller containers or container construction sites
-            // If they doesn't exist, load the best position for them as a drop point
-            this.loadSpawnStash(this._roomMgr.baseRoomSpawn);
-            this.loadControllerStash(this._roomMgr.baseRoomController);
-
         }
+
+        // Load our spawn/controller containers or container construction sites
+        // If they doesn't exist, load the best position for them as a drop point
+        this.loadSpawnStash(this._roomMgr.baseRoomSpawn);
+        this.loadControllerStash(this._roomMgr.baseRoomController);
     }
 
     createNeededStashes() {
@@ -157,7 +156,7 @@ export class StashMgr {
 
         let spacesFromCenter = 3;
         let boxPositions = RoomUtils.getBoxPositions(spacesFromCenter, spawn.pos);
-        // let dot = new RoomVisual(spawn.room.name);
+        //let dot = new RoomVisual(spawn.room.name);
         // for (let pos of boxPositions) {
         //     dot.circle(pos, {fill: 'orange'});
         // }

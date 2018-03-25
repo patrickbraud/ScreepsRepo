@@ -162,4 +162,32 @@ export function sourcePrototypes() {
             return droppedEnergyAmount;
         }
     });
+
+    Object.defineProperty(Source.prototype, "sourceSpawnRoad", {
+        get: function myProperty(): number {
+            if (!this._sourceSpawnRoad) {
+                let roomName = this.room.name;
+                // Get the base spawn for the room
+                let roomBaseSpawn = _.filter(Game.spawns, function(spawn) {
+                    return (spawn.pos.roomName == roomName
+                            && spawn.memory.ColonyID
+                            && !spawn.memory.SubSpawnID);
+                })
+                let roadPath: PathStep[] = this.room.findPath(roomBaseSpawn[0].pos, this.pos, {ignoreCreeps: true});
+                this._sourceSpawnRoad = roadPath.slice(0, roadPath.length - 1);
+            }
+            return this._sourceSpawnRoad;
+        }
+    });
+
+    Object.defineProperty(Source.prototype, "containerPos", {
+        get: function myProperty(): RoomPosition {
+            if (!this._containerPos) {
+                let road = this.sourceSpawnRoad;
+                let containerPos = road[road.length - 1];
+                this._containerPos = containerPos;
+            }
+            return this._containerPos;
+        }
+    });
 }

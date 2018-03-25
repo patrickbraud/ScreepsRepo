@@ -22,12 +22,6 @@ export function spawnPrototypes() {
                              + (BODYPART_COST.carry * carryCount)
                              + (BODYPART_COST.move * moveCount);
 
-        // Make sure we always make at least a 300 min cost body
-        while (energyRequired < 300) {
-            body.push(priority[0]);
-            energyRequired += BODYPART_COST[priority[0]];
-        }
-
         let baseBodyLength = body.length;
 
         let energyAvailable = this.room.energyAvailable;
@@ -73,7 +67,7 @@ export function spawnPrototypes() {
         }
 
         if (!waitForMax) {
-            while (energyRequired > energyAvailable && body.length > baseBodyLength) {
+            while (energyAvailable >= 300 && energyRequired > energyAvailable && body.length > baseBodyLength) {
                 let part = body.pop();
                 energyRequired -= BODYPART_COST[part];
             }
@@ -104,6 +98,13 @@ export function spawnPrototypes() {
             }
         }
 
+        // if (!waitForMax) {
+        //     while (energyAvailable >= 300 && energyRequired > energyAvailable) {
+        //         let part = body.pop();
+        //         energyRequired -= BODYPART_COST[part];
+        //     }
+        // }
+
         // console.log('Energy Required: ' + energyRequired);
         // console.log('Energy Available: ' + this.room.energyAvailable);
         // console.log('Energy Capacity: ' + this.room.energyCapacityAvailable);
@@ -118,7 +119,7 @@ export function spawnPrototypes() {
         let body: string[];
         if (harvesters.length == 0 && transporters.length == 0) {
             // starting over from scratch
-            body = this.createWorkerBody(1, 2, 2, [WORK, MOVE, CARRY], false);
+            body = this.createWorkerBody(1, 2, 2, [CARRY, MOVE, WORK], false);
         }
         else if (harvesters.length == 0 && transporters.length == 1) {
             body = this.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], false);
@@ -127,8 +128,6 @@ export function spawnPrototypes() {
             body = this.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], true)
         }
 
-
-        // }
         console.log('Harvester Body generated: ' + body.toString());
 
         let spawnHarvesterOpts = {

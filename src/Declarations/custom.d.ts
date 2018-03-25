@@ -9,6 +9,9 @@ interface Source {
     harvesterWorkCount: number;
     maxCreepCount: number;
     droppedEnergy: number;
+
+    sourceSpawnRoad: PathStep[];
+    containerPos: RoomPosition;
 }
 
 interface Room {

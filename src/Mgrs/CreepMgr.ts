@@ -86,4 +86,15 @@ export class CreepMgr {
             }
         }
     }
+
+    static bodyCost(body: string[]): number {
+
+        let bodyCost: number = 0;
+
+        for (let index = 0; index < body.length; index++) {
+            let bodyPart: string = body[index];
+            bodyCost += BODYPART_COST[bodyPart];
+        }
+        return bodyCost;
+    }
 }

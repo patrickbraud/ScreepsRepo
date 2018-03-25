@@ -2,6 +2,7 @@ import { Colony } from "Colony";
 import { SourceMgr } from "./SourceMgr";
 import { Screep } from "Creeps/Screep";
 import { StashMgr } from "./StashMgr";
+import { CreepMgr } from "./CreepMgr";
 
 // Manages the rooms for a colony
 export class RoomMgr {
@@ -144,7 +145,6 @@ export class RoomMgr {
                 totalLeftoverEnergy = leftoverSpawnEnergy;
                 //console.log('Leftover Spawn Energy: ' + leftoverSpawnEnergy);
             }
-
             //let totalLeftoverEnergy = leftoverControllerEnergy + leftoverSpawnEnergy;
 
 
@@ -156,6 +156,7 @@ export class RoomMgr {
                     newCreepCarryCapacity += 50;
                 }
             }
+            totalLeftoverEnergy -= CreepMgr.bodyCost(body)
             //console.log('New Upgrader Capacity: ' + newCreepCarryCapacity);
             if (totalLeftoverEnergy >= newCreepCarryCapacity) {
                 console.log('Total Leftover Energy: ' + totalLeftoverEnergy);
@@ -192,6 +193,7 @@ export class RoomMgr {
                 }
             }
 
+            leftoverSpawnEnergy -= CreepMgr.bodyCost(body);
             // If we have enough leftover energy to justify a new builder and we are under our builder limit
             if (leftoverSpawnEnergy >= newCreepCarryCapacity) {
                 for (let conSite of this.StashMgr.containerConstructionSites) {
@@ -206,11 +208,9 @@ export class RoomMgr {
                     }
                 }
 
-                //if (priorityBuilders.length < 6 && generalBuilders.length < 3) {
-                    console.log('Total Leftover Energy: ' + leftoverSpawnEnergy);
-                    this.baseRoomSpawn.spawnBuilder("0");
-                    return true;
-                //}
+                console.log('Total Leftover Energy: ' + leftoverSpawnEnergy);
+                this.baseRoomSpawn.spawnBuilder("0");
+                return true;
             }
         }
         return false;
@@ -262,14 +262,14 @@ export class RoomMgr {
         let leftoverDroppedSpawnEnergy: number = 0;
         // Get the amount of dropped energy at the spawn container location
         let dropPosition = this.StashMgr.getSpawnContainerPos();
-        let [energyFound] = this.baseRoom.lookForAt(RESOURCE_ENERGY, dropPosition);
-        if (energyFound != undefined) {
-            let droppedSpawnEnergy: number = energyFound.amount;
+        let energyFound: Resource[] = this.baseRoom.lookForAt(RESOURCE_ENERGY, dropPosition);
+        if (energyFound.length > 0) {
+            let droppedSpawnEnergy: number = energyFound[0].amount;
 
             // Get all creeps who want to collect this dropped energy
             let droppedEnergyCollectors: Creep[] = [];
             for (let creep of this.creeps) {
-                if (creep.memory.CollectionTargetID == energyFound.id) {
+                if (creep.memory.CollectionTargetID == energyFound[0].id) {
                     droppedEnergyCollectors.push(creep);
                 }
             }
