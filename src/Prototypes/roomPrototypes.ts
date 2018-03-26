@@ -34,17 +34,15 @@ export function roomPrototypes() {
 
     Object.defineProperty(Room.prototype, 'sourceContainers', {
         get: function() {
-
             if(!this._sourceContainers) {
 
-                let srcConts: { source: Source, container: Container }[] = [];
+                let srcConts: { container: Container, source: Source }[] = [];
                 for (let source of this.sourcesInRoom) {
-
-                    let look = this.lookForAtArea(LOOK_STRUCTURES, source.pos.y - 1, source.pos.x - 1, source.pos.y + 1, source.pos.x + 1, true);
-                    for (let result = 0; result < look.length; result++) {
-                        if (look[result].structure.structureType == STRUCTURE_CONTAINER) {
-                            srcConts.push({source: source, container: look[result]})
-                        }
+                    let pos = source.containerPos;
+                    let lookResult = this.lookForAt(LOOK_STRUCTURES, pos);
+                    let containerFound: Container = lookResult.find(structure => { return structure.structureType == STRUCTURE_CONTAINER });
+                    if (containerFound != undefined) {
+                        srcConts.push({container: containerFound, source: source})
                     }
                 }
                 this._sourceContainers = srcConts;
@@ -53,9 +51,21 @@ export function roomPrototypes() {
         }
     });
 
-    Object.defineProperty(Room.prototype, 'sourceRoads', {
+    Object.defineProperty(Room.prototype, 'sourceContainerConSites', {
         get: function() {
+            if(!this._sourceContainerConSites) {
 
+                let srcConts: { conSite: ConstructionSite, source: Source }[] = [];
+                for (let source of this.sourcesInRoom) {
+                    let pos = source.containerPos;
+                    let lookResult = this.lookForAt(LOOK_CONSTRUCTION_SITES, pos);
+                    if (lookResult.length > 0 && lookResult[0].structureType == STRUCTURE_CONTAINER) {
+                        srcConts.push({conSite: lookResult[0], source: source})
+                    }
+                }
+                this._sourceContainerConSites = srcConts;
+            }
+            return this._sourceContainerConSites;
         }
     });
 }

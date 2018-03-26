@@ -112,21 +112,7 @@ export function spawnPrototypes() {
         return body;
     }
 
-    StructureSpawn.prototype.spawnHarvester = function(targetSource: Source): number {
-
-        let harvesters = targetSource.harvesters;
-        let transporters = targetSource.transporters;
-        let body: string[];
-        if (harvesters.length == 0 && transporters.length == 0) {
-            // starting over from scratch
-            body = this.createWorkerBody(1, 2, 2, [CARRY, MOVE, WORK], false);
-        }
-        else if (harvesters.length == 0 && transporters.length == 1) {
-            body = this.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], false);
-        }
-        else /*if (harvesters.length == 1 && transporters.length == 0)*/ {
-            body = this.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], true)
-        }
+    StructureSpawn.prototype.spawnHarvester = function(body: string[], targetSource: Source): number {
 
         console.log('Harvester Body generated: ' + body.toString());
 

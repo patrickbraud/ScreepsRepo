@@ -126,16 +126,6 @@ export class Screep{
     }
 
     moveToTarget() {
-
-        // NOTE - maybe add ability to pass FindPathOpts to our move method
-        // if (opts != undefined) {
-        //     console.log('moving by coordinates');
-        //     // remove the first element, since it's our current position
-        //     this.MovePath = this.MovePath.slice(1);
-        //     console.log('x: ' + this.MovePath[0].x + ' y: ' + this.MovePath[0].y);
-        //     let moveResults: number = this.creep.moveTo(this.MovePath[0].x, this.MovePath[0].y, opts);
-        //     return moveResults;
-        // }
         let moveResult: number = this.creep.moveByPath(this.MovePath);
         this.PreviousMoveResult = moveResult;
         this.PreviousPos = this.creep.pos;

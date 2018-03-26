@@ -15,11 +15,30 @@ export class Harvester extends Screep {
         this.creep.memory.TargetSourceID = targetID;
     }
 
+    private _ticksFromSpawnToSource: number;
+    get TicksFromSpawnToSource(): number {
+        return this._ticksFromSpawnToSource;
+    }
+    set TicksFromSpawnToSource(tick: number) {
+        if (tick == undefined || tick == null) {
+            tick = 0;
+        }
+        this._ticksFromSpawnToSource = tick;
+        this.creep.memory.TicksFromSpawnToSource = tick;
+    }
+
+    private _targetSource: Source;
+    private _container: Container;
+
     constructor(creep: Creep, roomMgr: RoomMgr) {
         super(creep, roomMgr);
         this.TargetSourceID = creep.memory.TargetSourceID;
         this.Status = creep.memory.Status;
+        this.TicksFromSpawnToSource = creep.memory.TicksFromSpawnToSource;
         super.pathColor = "#4af900"
+
+        this._targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
+        this._container = this.roomMgr.StashMgr.getContainerForSource(this._targetSource);
     }
 
     work() {
@@ -48,31 +67,29 @@ export class Harvester extends Screep {
         //   - if no structures need energy, drop energy on ground
         else if (this.Status == CreepStatus.Depositing) {
 
-            let mySource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
-            let sourceContainer = this.roomMgr.StashMgr.getContainerForSource(mySource);
             //   - if we DO have transporters, drop energy on ground
             let transportersForSource = this.roomMgr.transporters.filter(transporter => {
                 let transporterSource = this.roomMgr.sourceMgr.getSourceByID(transporter.memory.TargetSourceID);
-                return transporterSource == mySource;
+                return transporterSource == this._targetSource;
             })
             // * if we have a container
-            if (sourceContainer != undefined && transportersForSource.length > 0) {
+            if (this._container != undefined && transportersForSource.length > 0) {
                 //   - (repair if necessary and not empty)
-                if (sourceContainer.hits < sourceContainer.hitsMax) {
+                if (this._container.hits < this._container.hitsMax) {
                     this.creep.say('🔨repair')
-                    this.repairContainer(sourceContainer);
+                    this.repairContainer(this._container);
                     return;
                 }
 
                 //   - if the container is full, drop the energy on the ground/container
-                if (sourceContainer.store[RESOURCE_ENERGY] == sourceContainer.storeCapacity) {
+                if (this._container.store[RESOURCE_ENERGY] == this._container.storeCapacity) {
                     this.creep.say('🔻drop');
                     this.creep.drop(RESOURCE_ENERGY);
                     return;
                 }
 
                 //   - deposit into container
-                this.depositIntoStructure(sourceContainer);
+                this.depositIntoStructure(this._container);
                 return;
             }
             // * if we don't have a container
@@ -120,12 +137,34 @@ export class Harvester extends Screep {
         }
     }
 
-    // Get to work!
     harvest(source: Source) {
 
         let harvestResult = this.creep.harvest(source);
         if (harvestResult == ERR_NOT_IN_RANGE) {
-            super.moveTo(source, this.pathColor);
+            let movePos: RoomPosition = this._targetSource.containerPos;
+            let lookAtPos = this.roomMgr.baseRoom.lookForAt(LOOK_CREEPS, movePos.x, movePos.y);
+            // If no creeps are standing on the container pos, move to it
+            if (lookAtPos.length == 0) {
+                this.creep.moveTo(movePos.x, movePos.y, {reusePath: 10});
+            }
+            else {
+                // Move to one of the open spaces
+                this.creep.moveTo(this._targetSource, {ignoreCreeps: false, reusePath: 10})
+            }
+
+            if (this.creep.memory.DistanceMeasured == undefined) {
+                this.TicksFromSpawnToSource += 1;
+            }
+        }
+        else if (harvestResult == OK) {
+            if (this.creep.memory.DistanceMeasured == undefined) {
+                this.creep.memory.DistanceMeasured = true;
+            }
+
+            if (this._targetSource.harvesters.length == 1
+                && (!this.creep.pos.isEqualTo(this._targetSource.containerPos))) {
+                    this.creep.moveTo(this._targetSource.containerPos);
+            }
         }
     }
 

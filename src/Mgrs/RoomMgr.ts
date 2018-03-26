@@ -23,6 +23,8 @@ export class RoomMgr {
     public extensions: Extension[];
     public constructionSites: ConstructionSite[];
 
+    public towers: StructureTower[];
+
     public sourceMgr: SourceMgr;
     public StashMgr: StashMgr;
 
@@ -88,6 +90,8 @@ export class RoomMgr {
         this.constructionSites = this.baseRoom.find(FIND_CONSTRUCTION_SITES);
         // Get extensions
         this.extensions = this.getStructuresOfType(STRUCTURE_EXTENSION) as Extension[];
+        // Get towers
+        this.towers = this.getStructuresOfType(STRUCTURE_TOWER) as StructureTower[];
     }
 
     loadCreeps() {

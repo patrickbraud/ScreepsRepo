@@ -3,9 +3,7 @@ interface Source {
     freeSpaceCount: number;
     creepsTargeting: Creep[];
     harvesters: Creep[];
-    harvesterCount: number;
     transporters: Creep[];
-    transporterCount: number;
     harvesterWorkCount: number;
     maxCreepCount: number;
     droppedEnergy: number;
@@ -17,7 +15,8 @@ interface Source {
 interface Room {
     positionIsValid: Boolean;
     sourcesInRoom: Source[];
-    sourceContainers;
+    sourceContainers: {container: Container, source: Source}[];
+    sourceContainerConSites: {conSite: ConstructionSite, source: Source}[];
 }
 
 interface Creep {
@@ -25,7 +24,7 @@ interface Creep {
 }
 
 interface StructureSpawn {
-    spawnHarvester(targetSource: Source): number;
+    spawnHarvester(body: string[], targetSource: Source): number;
     spawnTransporter(targetSource: Source): number;
     spawnUpgrader(body: string[]): number;
     spawnBuilder(prioritySiteID: string): number;

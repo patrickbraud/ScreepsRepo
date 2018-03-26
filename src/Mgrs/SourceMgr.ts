@@ -28,8 +28,26 @@ export class SourceMgr {
 
     spawnNeededHarvesters(): Boolean {
         for (let source of this.sources) {
-            if (source.harvesterWorkCount < 5 && source.harvesterCount < source.maxCreepCount) {
-                this._roomManager.baseRoomSpawn.spawnHarvester(source);
+
+            let harvesters = source.harvesters;
+            let transporters = source.transporters;
+            let body: string[];
+            if (harvesters.length == 0 && transporters.length == 0) {
+                // starting over from scratch
+                body = this._roomManager.baseRoomSpawn.createWorkerBody(1, 2, 2, [CARRY, MOVE, WORK], false);
+            }
+            else if (harvesters.length == 0 && transporters.length == 1) {
+                body = this._roomManager.baseRoomSpawn.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], false);
+            }
+            else /*if (harvesters.length == 1 && transporters.length == 0)*/ {
+                body = this._roomManager.baseRoomSpawn.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], true)
+            }
+
+            let prespawnNeeded = this.checkHarvesterPrespawn(source, body);
+
+            // Spawn if prespawn needed, not enough work parts
+            if (prespawnNeeded != undefined || source.harvesterWorkCount < 5 && source.harvesters.length < source.freeSpaceCount) {
+                this._roomManager.baseRoomSpawn.spawnHarvester(body, source);
                 return true;
             }
         }
@@ -39,16 +57,16 @@ export class SourceMgr {
     spawnNeededTransporters(): Boolean {
         for (let source of this.sources) {
             // Only spawn transporters if we have
-            if (source.harvesterCount > 0 && source.transporterCount < 5) {
+            if (source.harvesters.length > 0 && source.transporters.length < 5) {
 
                 // We have max harvesters, but no transporters. Spawn one no matter what
-                if (source.harvesterWorkCount >= 5 && source.transporterCount == 0) {
+                if (source.harvesterWorkCount >= 5 && source.transporters.length == 0) {
                     this._roomManager.baseRoomSpawn.spawnTransporter(source);
                     return true;
                 }
 
                 let body: string[];
-                if (source.transporterCount == 0) {
+                if (source.transporters.length == 0) {
                     body = this._roomManager.baseRoomSpawn.createBalancedBody([CARRY, MOVE], 6, false);
                 }
                 else {
@@ -76,6 +94,41 @@ export class SourceMgr {
             }
         }
         return false;
+    }
+
+    checkHarvesterPrespawn(source: Source, body: string[]): Creep {
+        for (let creep of source.harvesters) {
+            if (creep.memory.TicksFromSpawnToSource != undefined && creep.partCount(WORK) >= 2) {
+
+                // Time it will take for creep to spawn and reach source
+                let ticksToSpawnBody = body.length * 3;
+                let ticksToSource = creep.memory.TicksFromSpawnToSource + ticksToSpawnBody + 5; // test buffer
+
+                // Time creep will die
+                let creepDeathTme = Game.time + creep.ticksToLive;
+
+                // The time the creep will die - how long it would take a new creep there to replace it
+                let preSpawnTime = creepDeathTme - ticksToSource;
+
+                if (creep.ticksToLive == ticksToSource) {
+
+                    console.log('Presepawn Needed');
+                    console.log('ticksToSource: ' + ticksToSource);
+                    console.log('creepTTL: ' + creep.ticksToLive);
+                    console.log('creepDeathTime: ' + creepDeathTme);
+                    console.log('preSpawnTim: ' + preSpawnTime);
+
+                    if (this._roomManager.baseRoomSpawn.spawnCreep(body, 'test', {dryRun: true}) != OK) {
+                        // spawn is busy, delay prespawn until it is finished
+                        creep.memory.TicksFromSpawnToSource += 1;
+                        return undefined;
+                    }
+                    return creep;
+                }
+            }
+        }
+
+        return undefined;
     }
 
     getSourceByID(sourceID: string): Source {

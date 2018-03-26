@@ -30,15 +30,11 @@ export class StashMgr {
         this.containers = this._roomMgr.getStructuresOfType(STRUCTURE_CONTAINER) as Container[];
         this.containerConstructionSites = this._roomMgr.getConstructionSitesOfType(STRUCTURE_CONTAINER);
 
-        if (this.containers.length > 0 || this.containerConstructionSites.length > 0) {
-            // Load any container or container construction sites around our sources
-            for (let source of this._roomMgr.sourceMgr.sources) {
-                this.loadSourceStash(source);
-            }
-        }
+        this.sourceContainers = this._roomMgr.baseRoom.sourceContainers;
+        this.sourceContainerConSites = this._roomMgr.baseRoom.sourceContainerConSites;
 
         // Load our spawn/controller containers or container construction sites
-        // If they doesn't exist, load the best position for them as a drop point
+        // If they don't exist, load the best position for them as a drop point
         this.loadSpawnStash(this._roomMgr.baseRoomSpawn);
         this.loadControllerStash(this._roomMgr.baseRoomController);
     }
@@ -50,18 +46,13 @@ export class StashMgr {
             // if the we find a source that isn't in our sourceContainer list, it needs a container
             for (let source of this._roomMgr.sourceMgr.sources) {
 
-                let hasContainer = this.sourceContainers.find(sourceContainer => {
-                    return sourceContainer.source.id == source.id;
-                });
+                let sourceContainer = this.getContainerForSource(source);
+                if (sourceContainer == undefined) {
 
-                if (hasContainer == undefined) {
-
-                    let hasConSite = this.sourceContainerConSites.find(sourceConSite => {
-                        return sourceConSite.source.id == source.id;
-                    });
-
-                    if (hasConSite == undefined) {
-                        let conSitePos = this._getBestSourceContainerPos(RoomUtils.validPositions(source, ['wall']));
+                    let sourceContainerConSite = this.getContainerConSiteForSource(source);
+                    if (sourceContainerConSite == undefined) {
+                        //let conSitePos = this._getBestSourceContainerPos(RoomUtils.validPositions(source, ['wall']));
+                        let conSitePos = source.containerPos;
                         source.room.createConstructionSite(conSitePos, STRUCTURE_CONTAINER);
                     }
                 }
@@ -150,6 +141,11 @@ export class StashMgr {
                 }
             }
         }
+
+        // let sourceContainerPos = source.containerPos;
+
+        // let lookResult = source.room.lookForAt(LOOK_STRUCTURES, sourceContainerPos);
+
     }
 
     loadSpawnStash(spawn: Spawn) {
@@ -310,18 +306,18 @@ export class StashMgr {
         return undefined;
     }
 
-    private _getBestSourceContainerPos(validPositions: RoomPosition[]) {
-        let bestPos = null;
-        let maxCount = 0;
-        for(let pos of validPositions) {
-            //let maxValidPositions = this.validPositionCount(pos, 'wall');
-            let maxValidPositions = RoomUtils.validPositions(pos, ['wall']).length;
-            if (bestPos == null || maxValidPositions > maxCount) {
-                bestPos = pos;
-                maxCount = maxValidPositions;
-            }
-        }
-        return bestPos;
-    }
+    // private _getBestSourceContainerPos(validPositions: RoomPosition[]) {
+    //     let bestPos = null;
+    //     let maxCount = 0;
+    //     for(let pos of validPositions) {
+    //         //let maxValidPositions = this.validPositionCount(pos, 'wall');
+    //         let maxValidPositions = RoomUtils.validPositions(pos, ['wall']).length;
+    //         if (bestPos == null || maxValidPositions > maxCount) {
+    //             bestPos = pos;
+    //             maxCount = maxValidPositions;
+    //         }
+    //     }
+    //     return bestPos;
+    // }
 }
 

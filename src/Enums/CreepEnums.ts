@@ -8,9 +8,3 @@ export enum CreepStatus{
     Building = 5,
     Traveling = 6
 }
-
-export enum MiningStatus{
-    Traveling = 0,
-    Mining = 1,
-    Depositing = 2
-}

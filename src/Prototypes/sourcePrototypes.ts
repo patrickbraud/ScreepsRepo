@@ -46,48 +46,27 @@ export function sourcePrototypes() {
         configurable: true
     });
 
-    Object.defineProperty(Source.prototype, "maxCreepCount", {
-        get: function myProperty(): number {
-            let validSpaceCount: number = 0;
-            /*
-                x * *
-                * O *
-                * * y
-                Start at the x, end at the y
-            */
-            let currentPos = new RoomPosition(this.pos.x - 1, this.pos.y - 1, this.pos.roomName);
-            for (let xCount = 0; xCount < 3; xCount++, currentPos.x++) {
-                for (let yCount = 0; yCount < 3; yCount++, currentPos.y++) {
-                    if (!currentPos.isEqualTo(this.pos)) {
-                        let isValid = this.room.positionIsValid(currentPos);
-                        validSpaceCount = isValid ? ++validSpaceCount : validSpaceCount;
-                    }
-                }
-                currentPos.y -= 3;
-            }
-            return validSpaceCount;
-        }
-    });
-
     Object.defineProperty(Source.prototype, "creepsTargeting", {
         get: function myProperty(): Creep[] {
-            let creepsTargeting = [];
-            for (let creepName in Game.creeps) {
-                let creep = Game.creeps[creepName];
-                if (creep.memory.TargetSourceID) {
-                    if (creep.memory.TargetSourceID == this.id) {
-                        creepsTargeting.push(creep);
+            if (!this._creepsTargeting) {
+                let creepsTargeting = [];
+                for (let creepName in Game.creeps) {
+                    let creep = Game.creeps[creepName];
+                    if (creep.memory.TargetSourceID) {
+                        if (creep.memory.TargetSourceID == this.id) {
+                            creepsTargeting.push(creep);
+                        }
                     }
                 }
+                this._creepsTargeting = creepsTargeting
             }
-            return creepsTargeting;
+            return this._creepsTargeting;
         }
     });
 
     Object.defineProperty(Source.prototype, 'harvesters', {
         get: function(): Creep[] {
             if (!this._harvesters) {
-                //this._harvesters = [];
                 this._harvesters = this.creepsTargeting.filter(creep => {
                     return creep.memory.Role == 'harvester';
                 })
@@ -99,7 +78,6 @@ export function sourcePrototypes() {
     Object.defineProperty(Source.prototype, 'transporters', {
         get: function(): Creep[] {
             if (!this._transporters) {
-                //this._transporters = [];
                 this._transporters = this.creepsTargeting.filter(creep => {
                     return creep.memory.Role == 'transporter';
                 })
@@ -108,39 +86,18 @@ export function sourcePrototypes() {
         }
     });
 
-    Object.defineProperty(Source.prototype, "harvesterCount", {
-        get: function myProperty(): number {
-            let harvestersTargetingSource = 0;
-            for (let creep of this.creepsTargeting) {
-                if (creep.memory.Role == 'harvester') {
-                    harvestersTargetingSource++;
-                }
-            }
-            return harvestersTargetingSource;
-        }
-    });
-
-    Object.defineProperty(Source.prototype, "transporterCount", {
-        get: function myProperty(): number {
-            let transportersTargetingSource = 0;
-            for (let creep of this.creepsTargeting) {
-                if (creep.memory.Role == 'transporter') {
-                    transportersTargetingSource++;
-                }
-            }
-            return transportersTargetingSource;
-        }
-    });
-
     Object.defineProperty(Source.prototype, "harvesterWorkCount", {
         get: function myProperty(): number {
-            let totalWorkParts = 0;
-            for (let creep of this.creepsTargeting) {
-                if (creep.memory.Role == 'harvester') {
-                    totalWorkParts += creep.partCount(WORK);
+            if (!this._harvesterWorkCount) {
+                let totalWorkParts = 0;
+                for (let creep of this.creepsTargeting) {
+                    if (creep.memory.Role == 'harvester') {
+                        totalWorkParts += creep.partCount(WORK);
+                    }
                 }
+                this._harvesterWorkCount = totalWorkParts;
             }
-            return totalWorkParts;
+            return this._harvesterWorkCount;
         }
     });
 
@@ -180,14 +137,30 @@ export function sourcePrototypes() {
         }
     });
 
+    // Object.defineProperty(Source.prototype, "containerPos", {
+    //     get: function myProperty(): RoomPosition {
+    //         if (!this._containerPos) {
+    //             let road = this.sourceSpawnRoad;
+    //             let containerPos = road[road.length - 1];
+    //             this._containerPos = containerPos;
+    //         }
+    //         return this.room.getPositionAt(this._containerPos.x, this._containerPos.y);
+    //     }
+    // });
+
     Object.defineProperty(Source.prototype, "containerPos", {
-        get: function myProperty(): RoomPosition {
-            if (!this._containerPos) {
-                let road = this.sourceSpawnRoad;
-                let containerPos = road[road.length - 1];
-                this._containerPos = containerPos;
+        get: function (): RoomPosition {
+            if (this._containerPos == undefined) {
+                if (this.memory.containerPos == undefined) {
+                    let road = this.sourceSpawnRoad;
+                    let containerPos = road[road.length - 1];
+                    this.memory.containerPos = containerPos;
+                }
+                this._containerPos = this.memory.containerPos;
             }
-            return this._containerPos;
-        }
+            return this.room.getPositionAt(this._containerPos.x, this._containerPos.y);
+        },
+        enumerable: false,
+        configurable: true
     });
 }

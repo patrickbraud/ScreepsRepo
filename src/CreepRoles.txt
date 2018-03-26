@@ -37,7 +37,7 @@ Upgraders - 5 max currently
 	- move to spawn area and wait
 
 
-Builders - 2 per container site, 2 if construction sites present
+Builders - 2 per container site, 2 general
 * Building
 	- if we have a priority construction site
 		- Build the priority construction site if it exists
