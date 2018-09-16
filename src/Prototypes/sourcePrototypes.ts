@@ -121,7 +121,7 @@ export function sourcePrototypes() {
     });
 
     Object.defineProperty(Source.prototype, "sourceSpawnRoad", {
-        get: function myProperty(): number {
+        get: function myProperty(): PathStep[] {
             if (!this._sourceSpawnRoad) {
                 let roomName = this.room.name;
                 // Get the base spawn for the room
@@ -130,8 +130,17 @@ export function sourcePrototypes() {
                             && spawn.memory.ColonyID
                             && !spawn.memory.SubSpawnID);
                 })
+                // console.log(roomBaseSpawn[0].pos);
+                // console.log(this.pos);
+                // console.log(this.room);
                 let roadPath: PathStep[] = this.room.findPath(roomBaseSpawn[0].pos, this.pos, {ignoreCreeps: true});
+                // console.log(roadPath.length);
                 this._sourceSpawnRoad = roadPath.slice(0, roadPath.length - 1);
+
+                // let dot = new RoomVisual(this.room.name);
+                // for (let step = 0; step < roadPath.length; step++) {
+                //     dot.circle(roadPath[step].x, roadPath[step].y, { fill: 'yellow' })
+                // }
             }
             return this._sourceSpawnRoad;
         }
@@ -143,6 +152,8 @@ export function sourcePrototypes() {
     //             let road = this.sourceSpawnRoad;
     //             let containerPos = road[road.length - 1];
     //             this._containerPos = containerPos;
+    //             let dot = new RoomVisual(this.room.name);
+    //             dot.circle(containerPos, { fill: 'red' })
     //         }
     //         return this.room.getPositionAt(this._containerPos.x, this._containerPos.y);
     //     }
@@ -158,6 +169,8 @@ export function sourcePrototypes() {
                 }
                 this._containerPos = this.memory.containerPos;
             }
+            let dot = new RoomVisual(this.room.name);
+            dot.circle(this._containerPos, { fill: 'red' })
             return this.room.getPositionAt(this._containerPos.x, this._containerPos.y);
         },
         enumerable: false,

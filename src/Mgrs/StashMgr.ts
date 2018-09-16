@@ -152,7 +152,7 @@ export class StashMgr {
 
         let spacesFromCenter = 3;
         let boxPositions = RoomUtils.getBoxPositions(spacesFromCenter, spawn.pos);
-        //let dot = new RoomVisual(spawn.room.name);
+        let dot = new RoomVisual(spawn.room.name);
         // for (let pos of boxPositions) {
         //     dot.circle(pos, {fill: 'orange'});
         // }
@@ -161,6 +161,7 @@ export class StashMgr {
         let validBoxPositions = _.filter(boxPositions, function(pos) { return !RoomUtils.positionIsTerrainType(pos, 'wall') });
         // Get the closest positions to our sources
         let closeststashPosition: RoomPosition[] = [];
+
         for (let source of this._roomMgr.sourceMgr.sources) {
              validBoxPositions.sort((a: RoomPosition, b: RoomPosition): number => { return (RoomUtils.distanceTo(a, source.pos) - RoomUtils.distanceTo(b, source.pos))});
             //dot.circle(validBoxPositions[0], {fill: 'red'});
@@ -171,8 +172,8 @@ export class StashMgr {
         if (closeststashPosition.length == 2) {
             // Get the midpoint between the 2 closest stash positions
             let midPosition = RoomUtils.midPoint(closeststashPosition[0], closeststashPosition[1]);
-            //dot.circle(midPosition, { fill: 'green' })
             bestSpawnContainerPos = midPosition;
+            dot.circle(bestSpawnContainerPos, { fill: 'green' })
         }
         else {
             bestSpawnContainerPos = closeststashPosition[0];
@@ -201,7 +202,7 @@ export class StashMgr {
     loadControllerStash(controller: Controller) {
         let spacesFromCenter = 4;
         let boxPositions = RoomUtils.getBoxPositions(spacesFromCenter, controller.pos);
-        // let dot = new RoomVisual(controller.room.name);
+        let dot = new RoomVisual(controller.room.name);
         // for (let pos of boxPositions) {
         //     dot.circle(pos, {fill: 'orange'});
         // }
@@ -215,7 +216,7 @@ export class StashMgr {
         validBoxPositions.sort((a: RoomPosition, b: RoomPosition): number => {
             return (RoomUtils.distanceTo(a, this.spawnEnergyDropPosition) - RoomUtils.distanceTo(b, this.spawnEnergyDropPosition)
         )});
-        //dot.circle(validBoxPositions[0], {fill: 'red'});
+        dot.circle(validBoxPositions[0], {fill: 'red'});
 
 
         let bestControllerContainerPos: RoomPosition = validBoxPositions[0];

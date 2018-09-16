@@ -3,6 +3,8 @@ import { SourceMgr } from "./SourceMgr";
 import { Screep } from "Creeps/Screep";
 import { StashMgr } from "./StashMgr";
 import { CreepMgr } from "./CreepMgr";
+import { CreepStatus } from "Enums/CreepEnums";
+import { DefenseMeasures } from "Defenses/DefenseMeasures";
 
 // Manages the rooms for a colony
 export class RoomMgr {
@@ -13,12 +15,15 @@ export class RoomMgr {
     public baseRoomController: Controller;
     public baseRoomStructures: Structure[];
 
+    public defenseMeasures: DefenseMeasures;
+
     public creeps: Creep[];
     public creepNames: string[];
     public transporters: Creep[];
     public harvesters: Creep[];
     public upgraders: Creep[];
     public builders: Creep[];
+    public distributors: Creep[];
 
     public extensions: Extension[];
     public constructionSites: ConstructionSite[];
@@ -40,6 +45,8 @@ export class RoomMgr {
 
         this.sourceMgr = new SourceMgr(this);
         this.StashMgr = new StashMgr(this);
+
+        this.defenseMeasures = new DefenseMeasures(this);
     }
 
     runRooms() {
@@ -49,7 +56,11 @@ export class RoomMgr {
         // Create creeps
         if (this.sourceMgr.spawnNeededHarvesters()) { return;}
         if (this.sourceMgr.spawnNeededTransporters()) { return; }
-        if (this.spawnNeededBuilders()) {return };
+
+        this.defenseMeasures.managDefenses();
+
+        if (this.spawnNeededBuilders()) { return };
+        if (this.spawnNeededDistributors()) { return;}
         if (this.spawnNeededUpgraders()) { return };
     }
 
@@ -101,6 +112,7 @@ export class RoomMgr {
         this.harvesters = [];
         this.upgraders = [];
         this.builders = [];
+        this.distributors = [];
 
         for (let creepName in Game.creeps) {
             if (!Game.creeps[creepName]) {
@@ -127,6 +139,9 @@ export class RoomMgr {
                 else if (role == 'builder') {
                     this.builders.push(creep);
                 }
+                else if (role == 'distributor') {
+                    this.distributors.push(creep);
+                }
             }
         }
     }
@@ -152,7 +167,7 @@ export class RoomMgr {
             //let totalLeftoverEnergy = leftoverControllerEnergy + leftoverSpawnEnergy;
 
 
-            let body: string[] = this.baseRoomSpawn.createWorkerBody(2, 4, 6, [CARRY, MOVE, WORK], false)
+            let body: string[] = this.baseRoomSpawn.createWorkerBody(2, 6, 8, [CARRY, MOVE, WORK], false)
 
             let newCreepCarryCapacity: number = 0;
             for (let part of body) {
@@ -219,6 +234,34 @@ export class RoomMgr {
         }
         return false;
     }
+
+    spawnNeededDistributors(): Boolean {
+        if (this.distributors.length < 1) {
+            let body = this.baseRoomSpawn.createBalancedBody([CARRY, MOVE], 12, false);
+            //body.unshift(WORK, CARRY);
+
+            while (CreepMgr.bodyCost(body) > this.baseRoom.energyCapacityAvailable) {
+                body.pop();
+                body.pop();
+            }
+
+            let spawnDistributorOpts = {
+                Role: 'distributor',
+                MovePath: "",
+                MoveID: 0,
+                PreviousPos: undefined,
+                PreviousMoveResult: undefined,
+                Status: CreepStatus.Collecting,
+                ColonyID: this.colony.ColonyID
+            }
+
+            let name = this.baseRoomSpawn.generateCreepName('distro', this.colony.ColonyID.toString());
+            this.baseRoomSpawn.spawnCreep(body, name, { memory: spawnDistributorOpts });
+            return true;
+        }
+        return false;
+    }
+
 
     distanceTo(creep: Creep, pos: RoomPosition): number {
         return Math.sqrt(Math.pow(pos.x - creep.pos.x, 2) + Math.pow(pos.y - creep.pos.y, 2));

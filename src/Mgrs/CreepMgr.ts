@@ -3,6 +3,7 @@ import { Upgrader } from "Creeps/Upgrader";
 import { RoomMgr } from "./RoomMgr";
 import { Transporter } from "Creeps/Transporter";
 import { Builder } from "Creeps/Builder";
+import { Distributor } from "Creeps/Distributor";
 
 export class CreepMgr {
 
@@ -17,17 +18,7 @@ export class CreepMgr {
     public upgraders: Upgrader[] = [];
     public transporters: Transporter[] = [];
     public builders: Builder[] = [];
-
-    // private _spawnUpgraderOpts = {
-    //     Role: 'upgrader',
-    //     TargetSourceID: 0,
-    //     MovePath: "",
-    //     MoveID: 0,
-    //     PreviousPos: undefined,
-    //     PreviousMoveResult: undefined,
-    //     Status: 0,
-    //     ColonyID: 0
-    // }
+    public distributors: Distributor[] = [];
 
     constructor(roomMgr: RoomMgr) {
         this._roomMgr = roomMgr;
@@ -48,6 +39,9 @@ export class CreepMgr {
         })
         this.builders.forEach(builder => {
             builder.work();
+        })
+        this.distributors.forEach(distributor => {
+            distributor.work();
         })
     }
 
@@ -83,6 +77,9 @@ export class CreepMgr {
             }
             else if (creep.memory.Role == 'builder') {
                 this.builders.push(new Builder(creep, this._roomMgr));
+            }
+            else if (creep.memory.Role == 'distributor') {
+                this.distributors.push(new Distributor(creep, this._roomMgr));
             }
         }
     }

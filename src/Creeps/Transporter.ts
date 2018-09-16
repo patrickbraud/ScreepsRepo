@@ -82,16 +82,18 @@ export class Transporter extends Screep{
         //   - deposit into container if not full
         // * move to spawn and drop energy
         if (this.Status == CreepStatus.Transporting) {
-            // * depsoit into extensions/spawn that need energy
-            let structuresNeedEnergy = this.roomMgr.extensions.filter(ext => {
-                return ext.energy < ext.energyCapacity
-            }).sort((a: Structure, b: Structure): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
-            if (this.roomMgr.baseRoomSpawn.energy < this.roomMgr.baseRoomSpawn.energyCapacity) {
-                structuresNeedEnergy.push(this.roomMgr.baseRoomSpawn);
-            }
-            if (structuresNeedEnergy.length > 0) {
-                this.deposit(structuresNeedEnergy[0]);
-                return;
+            if (this.roomMgr.distributors.length == 0) {
+                // * depsoit into extensions/spawn that need energy
+                let structuresNeedEnergy = this.roomMgr.extensions.filter(ext => {
+                    return ext.energy < ext.energyCapacity
+                }).sort((a: Structure, b: Structure): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
+                if (this.roomMgr.baseRoomSpawn.energy < this.roomMgr.baseRoomSpawn.energyCapacity) {
+                    structuresNeedEnergy.push(this.roomMgr.baseRoomSpawn);
+                }
+                if (structuresNeedEnergy.length > 0) {
+                    this.deposit(structuresNeedEnergy[0]);
+                    return;
+                }
             }
 
             // * if the room spawn DOES have a container
@@ -104,10 +106,12 @@ export class Transporter extends Screep{
 
             // * if the room controller DOES have a container
             //   - deposit into container if not full
-            let controllerContainer = this.roomMgr.StashMgr.controllerContainer;
-            if (controllerContainer != undefined && controllerContainer.store[RESOURCE_ENERGY] < controllerContainer.storeCapacity) {
-                this.deposit(controllerContainer);
-                return;
+            if (this.roomMgr.distributors.length == 0) {
+                let controllerContainer = this.roomMgr.StashMgr.controllerContainer;
+                if (controllerContainer != undefined && controllerContainer.store[RESOURCE_ENERGY] < controllerContainer.storeCapacity) {
+                    this.deposit(controllerContainer);
+                    return;
+                }
             }
 
             // * move to spawn and drop energy

@@ -95,10 +95,6 @@ export class Harvester extends Screep {
             // * if we don't have a container
             else {
                 //   - if we DO have transporters, drop energy on ground
-                // let transportersForSource = this.roomMgr.transporters.filter(transporter => {
-                //     let transporterSource = this.roomMgr.sourceMgr.getSourceByID(transporter.memory.TargetSourceID);
-                //     return transporterSource == mySource;
-                // })
                 if (transportersForSource.length > 0) {
                     this.creep.drop(RESOURCE_ENERGY);
                     return;

@@ -5,16 +5,13 @@ export class DefenseMeasures {
 
     private _roomMgr: RoomMgr;
 
-    towers: Tower[];
+    towers: Tower[] = [];
 
-    hostiles: Creep[];
+    hostiles: Creep[] = [];
 
     constructor(roomMgr: RoomMgr) {
         this._roomMgr = roomMgr;
         this.loadTowers();
-
-        this.hostiles = [];
-        this.towers = []
     }
 
     loadTowers() {

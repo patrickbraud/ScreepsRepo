@@ -14,16 +14,16 @@ export class SourceMgr {
 
         this.sources = this._roomManager.baseRoom.sourcesInRoom;
 
-        for (let source of this.sources) {
-            let draw = new RoomVisual(source.room.name);
-            let roadPath = source.sourceSpawnRoad;
-            for (let step of roadPath) {
-                draw.circle(step.x, step.y, {fill: 'green'});
-            }
+        // for (let source of this.sources) {
+        //     let draw = new RoomVisual(source.room.name);
+        //     let roadPath = source.sourceSpawnRoad;
+        //     for (let step of roadPath) {
+        //         draw.circle(step.x, step.y, {fill: 'green'});
+        //     }
 
-            let containerPos = source.containerPos;
-            draw.circle(containerPos, {fill: 'blue'});
-        }
+        //     let containerPos = source.containerPos;
+        //     draw.circle(containerPos, {fill: 'blue'});
+        // }
     }
 
     spawnNeededHarvesters(): Boolean {
