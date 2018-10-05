@@ -20,8 +20,9 @@ export class Tower {
 
     repairStructures(structures: Structure[]) {
         // Only repair if we have at last 70% of our energy
-        if (structures.length > 0 && this.tower.energy > (0.7 & this.tower.energyCapacity)) {
-            let closestStructurese = structures.sort((a: Structure, b: Structure): number => { return (RoomUtils.distanceTo(a, this.tower.pos) - RoomUtils.distanceTo(b, this.tower.pos))});
+        if (structures.length > 0 && this.tower.energy > (0.7 * this.tower.energyCapacity)) {
+            //let closestStructurese = structures.sort((a: Structure, b: Structure): number => { return (RoomUtils.distanceTo(a, this.tower.pos) - RoomUtils.distanceTo(b, this.tower.pos))});
+            let closestStructurese = structures.sort((a: Structure, b: Structure): number => { return (a.hits - b.hits) } );
             this.tower.repair(closestStructurese[0]);
         }
     }

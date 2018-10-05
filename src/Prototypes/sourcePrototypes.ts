@@ -169,8 +169,8 @@ export function sourcePrototypes() {
                 }
                 this._containerPos = this.memory.containerPos;
             }
-            let dot = new RoomVisual(this.room.name);
-            dot.circle(this._containerPos, { fill: 'red' })
+            // let dot = new RoomVisual(this.room.name);
+            // dot.circle(this._containerPos, { fill: 'red' })
             return this.room.getPositionAt(this._containerPos.x, this._containerPos.y);
         },
         enumerable: false,

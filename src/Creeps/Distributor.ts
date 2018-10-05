@@ -37,14 +37,6 @@ export class Distributor extends Screep {
         }
         else if (this.Status == CreepStatus.Depositing) {
 
-            // Fill towers if they have less than 80% capacity
-            let lowTowers = this.roomMgr.towers.filter(tower => { return tower.energy < (0.80 * tower.energyCapacity) });
-            if (lowTowers.length > 0) {
-                let closestTowers = lowTowers.sort((a: StructureTower, b: StructureTower): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
-                this.fillTower(closestTowers[0]);
-                return;
-            }
-
             // * depsoit into extensions/spawn that need energy
             let structuresNeedEnergy = this.roomMgr.extensions.filter(ext => {
                 return ext.energy < ext.energyCapacity
@@ -54,6 +46,14 @@ export class Distributor extends Screep {
             }
             if (structuresNeedEnergy.length > 0) {
                 this.depositIntoStructure(structuresNeedEnergy[0]);
+                return;
+            }
+
+            // Fill towers if they have less than 80% capacity
+            let lowTowers = this.roomMgr.towers.filter(tower => { return tower.energy < (0.80 * tower.energyCapacity) });
+            if (lowTowers.length > 0) {
+                let closestTowers = lowTowers.sort((a: StructureTower, b: StructureTower): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
+                this.fillTower(closestTowers[0]);
                 return;
             }
 

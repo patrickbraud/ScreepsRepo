@@ -20,14 +20,14 @@ export class DefenseMeasures {
         }
     }
 
-    managDefenses() {
+    manageDefenses() {
         this.hostiles = this._roomMgr.baseRoom.find(FIND_HOSTILE_CREEPS);
         if (this.hostiles.length > 0) {
             this.defendRoom();
             return;
         }
 
-        this.towersRepairStructurees();
+        this.towersRepairStructures();
     }
 
     defendRoom() {
@@ -37,7 +37,7 @@ export class DefenseMeasures {
         }
     }
 
-    towersRepairStructurees() {
+    towersRepairStructures() {
         let damagedStructures = this._roomMgr.baseRoomStructures.filter(struct => {
             return struct.hits < struct.hitsMax;
         });

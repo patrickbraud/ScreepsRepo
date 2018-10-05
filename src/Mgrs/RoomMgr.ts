@@ -57,7 +57,7 @@ export class RoomMgr {
         if (this.sourceMgr.spawnNeededHarvesters()) { return;}
         if (this.sourceMgr.spawnNeededTransporters()) { return; }
 
-        this.defenseMeasures.managDefenses();
+        this.defenseMeasures.manageDefenses();
 
         if (this.spawnNeededBuilders()) { return };
         if (this.spawnNeededDistributors()) { return;}
