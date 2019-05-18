@@ -151,7 +151,7 @@ export class RoomMgr {
     }
 
     spawnNeededUpgraders(): Boolean {
-        if (this.transporters.length > 0 && this.upgraders.length < 5) {
+        if (this.transporters.length > 0 && this.upgraders.length < 4) {
 
             let totalLeftoverEnergy: number = 0;
             if (this.StashMgr.controllerContainer != undefined) {
@@ -195,7 +195,7 @@ export class RoomMgr {
         })
         let totalBuilders = priorityBuilders.length + generalBuilders.length;
 
-        if (this.constructionSites.length > 0 && totalBuilders < 5) {
+        if (this.constructionSites.length > 0 && totalBuilders < 4) {
 
             // console.log('General Builders: ' + generalBuilders.length);
             // console.log('Priority Builders: ' + priorityBuilders.length);
@@ -237,29 +237,39 @@ export class RoomMgr {
 
     spawnNeededDistributors(): Boolean {
         if (this.distributors.length < 1) {
-            let body = this.baseRoomSpawn.createBalancedBody([CARRY, MOVE], 12, false);
-            //body.unshift(WORK, CARRY);
-
-            while (CreepMgr.bodyCost(body) > this.baseRoom.energyCapacityAvailable) {
-                body.pop();
-                body.pop();
-            }
-
-            let spawnDistributorOpts = {
-                Role: 'distributor',
-                MovePath: "",
-                MoveID: 0,
-                PreviousPos: undefined,
-                PreviousMoveResult: undefined,
-                Status: CreepStatus.Collecting,
-                ColonyID: this.colony.ColonyID
-            }
-
-            let name = this.baseRoomSpawn.generateCreepName('distro', this.colony.ColonyID.toString());
-            this.baseRoomSpawn.spawnCreep(body, name, { memory: spawnDistributorOpts });
+            this._spawnDistributor();
             return true;
         }
+
+        if (this.baseRoomController.level >= 5) {
+            if (this.distributors.length < 2 && this.StashMgr.sourceLinks.length >= 2) {
+                this._spawnDistributor();
+                return true;
+            }
+        }
         return false;
+    }
+
+    private _spawnDistributor() {
+        let body = this.baseRoomSpawn.createBalancedBody([CARRY, MOVE], 15, false);
+
+        while (CreepMgr.bodyCost(body) > this.baseRoom.energyCapacityAvailable) {
+            body.pop();
+            body.pop();
+        }
+
+        let spawnDistributorOpts = {
+            Role: 'distributor',
+            MovePath: "",
+            MoveID: 0,
+            PreviousPos: undefined,
+            PreviousMoveResult: undefined,
+            Status: CreepStatus.Collecting,
+            ColonyID: this.colony.ColonyID
+        }
+
+        let name = this.baseRoomSpawn.generateCreepName('distro', this.colony.ColonyID.toString());
+        this.baseRoomSpawn.spawnCreep(body, name, { memory: spawnDistributorOpts });
     }
 
 
@@ -287,6 +297,9 @@ export class RoomMgr {
         if (spawnContainer != undefined) {
             let spawnContainerEnergy: number = 0;
             spawnContainerEnergy = spawnContainer.store[RESOURCE_ENERGY];
+            if (this.StashMgr.spawnLink != undefined) {
+                spawnContainerEnergy += this.StashMgr.spawnLink.energy;
+            }
 
             if (spawnContainerEnergy > 0) {
                 // Get all creeps who want to collect from the spawn container

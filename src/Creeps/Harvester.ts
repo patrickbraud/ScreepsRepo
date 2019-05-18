@@ -29,6 +29,8 @@ export class Harvester extends Screep {
 
     private _targetSource: Source;
     private _container: Container;
+    private _link: Link;
+    private _spawnLink: Link;
 
     constructor(creep: Creep, roomMgr: RoomMgr) {
         super(creep, roomMgr);
@@ -39,6 +41,20 @@ export class Harvester extends Screep {
 
         this._targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
         this._container = this.roomMgr.StashMgr.getContainerForSource(this._targetSource);
+        this._link = this.roomMgr.StashMgr.getLinkForSource(this._targetSource);
+        this._spawnLink = this.roomMgr.StashMgr.spawnLink;
+
+        if (this._link != undefined) {
+            // If the source link is full, not on cooldown, and the spawn link exists
+            // then transfer energy to the spawn link
+            let linkFull = this._link.energy ==  this._link.energyCapacity;
+            if (linkFull &&
+                this._link.cooldown == 0 &&
+                this._spawnLink != undefined &&
+                this._spawnLink.energy == 0) {
+                this._link.transferEnergy(this._spawnLink);
+            }
+        }
     }
 
     work() {
@@ -58,6 +74,9 @@ export class Harvester extends Screep {
             let targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
             this.harvest(targetSource);
         }
+        // * if we have a link
+        //   - deposit into link (if not full)
+        //   - if the link is full (and not on cooldown), transfer to spawn link and drop into container
         // * if we have a container
         //   - deposit into container (repair if necessary and not empty)
         //   - if the container is full, drop the energy on the ground/container
@@ -72,12 +91,34 @@ export class Harvester extends Screep {
                 let transporterSource = this.roomMgr.sourceMgr.getSourceByID(transporter.memory.TargetSourceID);
                 return transporterSource == this._targetSource;
             })
+            // * if we have a link
+            if (this._link != undefined) {
+
+                // If the source link is full, not on cooldown, and the spawn link exists
+                // then transfer energy to the spawn link
+                let linkFull = this._link.energy ==  this._link.energyCapacity;
+                if (linkFull &&
+                    this._link.cooldown == 0 &&
+                    this._spawnLink != undefined &&
+                    this._spawnLink.energy == 0) {
+                    this._link.transferEnergy(this._spawnLink);
+                }
+
+                //  - Link is not full
+                if (!linkFull) {
+                    this.depositIntoStructure(this._link)
+                    return;
+                }
+                else {
+                    // - If there is stil energy to deposit, continue with deposit logic
+                    if (this.creep.carry.energy ==  0) return;
+                }
+            }
+
             // * if we have a container
             if (this._container != undefined && transportersForSource.length > 0) {
                 //   - (repair if necessary and not empty)
-                if (this._container.hits < this._container.hitsMax) {
-                    this.creep.say('🔨repair')
-                    this.repairContainer(this._container);
+                if (this.repairContainerIfNeeded(this._container)){
                     return;
                 }
 
@@ -117,6 +158,15 @@ export class Harvester extends Screep {
                 this.creep.drop(RESOURCE_ENERGY);
             }
         }
+    }
+
+    repairContainerIfNeeded(container: Container): Boolean {
+        if (container.hits < container.hitsMax) {
+            this.creep.say('🔨repair')
+            this.repairContainer(container);
+            return true;
+        }
+        return false
     }
 
     repairContainer(container: Container) {

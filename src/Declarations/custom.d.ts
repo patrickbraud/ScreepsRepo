@@ -10,6 +10,7 @@ interface Source {
 
     sourceSpawnRoad: PathStep[];
     containerPos: RoomPosition;
+    linkPos: RoomPosition;
 }
 
 interface Room {
@@ -17,6 +18,8 @@ interface Room {
     sourcesInRoom: Source[];
     sourceContainers: {container: Container, source: Source}[];
     sourceContainerConSites: {conSite: ConstructionSite, source: Source}[];
+    sourceLinks: {link: Link, source: Source}[];
+    sourceLinkConSites: {linkConSite: ConstructionSite, source: Source}[];
 }
 
 interface Creep {

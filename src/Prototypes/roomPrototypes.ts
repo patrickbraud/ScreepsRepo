@@ -51,6 +51,25 @@ export function roomPrototypes() {
         }
     });
 
+    Object.defineProperty(Room.prototype, 'sourceLinks', {
+        get: function() {
+            if(!this._sourceLinks) {
+
+                let srcLinks: { link: Link, source: Source }[] = [];
+                for (let source of this.sourcesInRoom) {
+                    let pos = source.linkPos;
+                    let lookResult = this.lookForAt(LOOK_STRUCTURES, pos);
+                    let linkFound: Link = lookResult.find(structure => { return structure.structureType == STRUCTURE_LINK });
+                    if (linkFound != undefined) {
+                        srcLinks.push({link: linkFound, source: source})
+                    }
+                }
+                this._sourceLinks = srcLinks;
+            }
+            return this._sourceLinks;
+        }
+    });
+
     Object.defineProperty(Room.prototype, 'sourceContainerConSites', {
         get: function() {
             if(!this._sourceContainerConSites) {
@@ -66,6 +85,24 @@ export function roomPrototypes() {
                 this._sourceContainerConSites = srcConts;
             }
             return this._sourceContainerConSites;
+        }
+    });
+
+    Object.defineProperty(Room.prototype, 'sourceLinkConSites', {
+        get: function() {
+            if(!this._sourceLinkConSites) {
+
+                let srcLinkConSites: { linkConSite: ConstructionSite, source: Source }[] = [];
+                for (let source of this.sourcesInRoom) {
+                    let pos = source.linkPos;
+                    let lookResult = this.lookForAt(LOOK_CONSTRUCTION_SITES, pos);
+                    if (lookResult.length > 0 && lookResult[0].structureType == STRUCTURE_LINK) {
+                        srcLinkConSites.push({linkConSite: lookResult[0], source: source})
+                    }
+                }
+                this._sourceLinkConSites = srcLinkConSites;
+            }
+            return this._sourceLinkConSites;
         }
     });
 }

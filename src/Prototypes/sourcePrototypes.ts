@@ -130,34 +130,14 @@ export function sourcePrototypes() {
                             && spawn.memory.ColonyID
                             && !spawn.memory.SubSpawnID);
                 })
-                // console.log(roomBaseSpawn[0].pos);
-                // console.log(this.pos);
-                // console.log(this.room);
                 let roadPath: PathStep[] = this.room.findPath(roomBaseSpawn[0].pos, this.pos, {ignoreCreeps: true});
-                // console.log(roadPath.length);
                 this._sourceSpawnRoad = roadPath.slice(0, roadPath.length - 1);
 
-                // let dot = new RoomVisual(this.room.name);
-                // for (let step = 0; step < roadPath.length; step++) {
-                //     dot.circle(roadPath[step].x, roadPath[step].y, { fill: 'yellow' })
-                // }
+                // Road dot visuals can be found in the containerPos property below
             }
             return this._sourceSpawnRoad;
         }
     });
-
-    // Object.defineProperty(Source.prototype, "containerPos", {
-    //     get: function myProperty(): RoomPosition {
-    //         if (!this._containerPos) {
-    //             let road = this.sourceSpawnRoad;
-    //             let containerPos = road[road.length - 1];
-    //             this._containerPos = containerPos;
-    //             let dot = new RoomVisual(this.room.name);
-    //             dot.circle(containerPos, { fill: 'red' })
-    //         }
-    //         return this.room.getPositionAt(this._containerPos.x, this._containerPos.y);
-    //     }
-    // });
 
     Object.defineProperty(Source.prototype, "containerPos", {
         get: function (): RoomPosition {
@@ -169,9 +149,33 @@ export function sourcePrototypes() {
                 }
                 this._containerPos = this.memory.containerPos;
             }
+            // let roadDot = new RoomVisual(this.room.name);
+            // for (let step = 0; step < this.sourceSpawnRoad.length; step++) {
+            //     roadDot.circle(this.sourceSpawnRoad[step].x, this.sourceSpawnRoad[step].y, { fill: 'yellow' })
+            // }
+
             // let dot = new RoomVisual(this.room.name);
             // dot.circle(this._containerPos, { fill: 'red' })
             return this.room.getPositionAt(this._containerPos.x, this._containerPos.y);
+        },
+        enumerable: false,
+        configurable: true
+    });
+
+    Object.defineProperty(Source.prototype, "linkPos", {
+        get: function (): RoomPosition {
+            if (this._linkPos == undefined) {
+                if (this.memory.linkPos == undefined) {
+                    let road = this.sourceSpawnRoad;
+                    let linkPos = road[road.length - 2];
+                    this.memory.linkPos = linkPos;
+                }
+                this._linkPos = this.memory.linkPos;
+            }
+
+            // let dot = new RoomVisual(this.room.name);
+            // dot.circle(this._linkPos, { fill: 'green' })
+            return this.room.getPositionAt(this._linkPos.x, this._linkPos.y);
         },
         enumerable: false,
         configurable: true

@@ -23,6 +23,13 @@ export class Distributor extends Screep {
         }
 
         if (this.Status == CreepStatus.Collecting) {
+
+            let spawnLink = this.roomMgr.StashMgr.spawnLink;
+            if (spawnLink != undefined && spawnLink.energy > 0) {
+                this.collectFromStructure(spawnLink);
+                return;
+            }
+
             let sourceEnergy = this.checkForDroppedEnergy(this.roomMgr.StashMgr.getSpawnContainerPos());
             if (sourceEnergy != undefined) {
                 this.pickUpEnergy(sourceEnergy);
@@ -31,7 +38,7 @@ export class Distributor extends Screep {
 
             let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
             if (spawnContainer != undefined && spawnContainer.store.energy > 0) {
-                this.collectFromContainer(spawnContainer);
+                this.collectFromStructure(spawnContainer);
                 return;
             }
         }
@@ -77,10 +84,10 @@ export class Distributor extends Screep {
         }
     }
 
-    collectFromContainer(container: Container) {
-        let withdrawResult = this.creep.withdraw(container, RESOURCE_ENERGY);
+    collectFromStructure(structure: Structure) {
+        let withdrawResult = this.creep.withdraw(structure, RESOURCE_ENERGY);
         if (withdrawResult == ERR_NOT_IN_RANGE) {
-            super.moveTo(container, this.pathColor);
+            super.moveTo(structure, this.pathColor);
         }
     }
 

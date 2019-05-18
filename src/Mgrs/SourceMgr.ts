@@ -39,7 +39,7 @@ export class SourceMgr {
             else if (harvesters.length == 0 && transporters.length == 1) {
                 body = this._roomManager.baseRoomSpawn.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], false);
             }
-            else /*if (harvesters.length == 1 && transporters.length == 0)*/ {
+            else {
                 body = this._roomManager.baseRoomSpawn.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], true)
             }
 

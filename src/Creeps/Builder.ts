@@ -107,6 +107,13 @@ export class Builder extends Screep {
                 return;
             }
 
+            let spawnlink = this.roomMgr.StashMgr.spawnLink;
+            if (spawnlink != undefined && spawnlink.energy > 0) {
+                this.CollectionTargetID = spawnlink.id;
+                this.collectFromStructure(spawnlink);
+                return;
+            }
+
             // * move to spawn area and wait
             // let spawnDropPosition: RoomPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
             // this.moveToSpawnDropArea(spawnDropPosition);
