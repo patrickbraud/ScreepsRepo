@@ -32,6 +32,16 @@ export function roomPrototypes() {
         configurable: true
     });
 
+    Object.defineProperty(Room.prototype, 'exits', {
+        get: function() {
+            if(!this._exits) {
+                let exits = Game.map.describeExits(this.name)
+                this._exits = exits;
+            }
+            return this._exits;
+        }
+    });
+
     Object.defineProperty(Room.prototype, 'sourceContainers', {
         get: function() {
             if(!this._sourceContainers) {

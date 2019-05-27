@@ -16,6 +16,7 @@ interface Source {
 interface Room {
     positionIsValid: Boolean;
     sourcesInRoom: Source[];
+    exits: {[direction: string]: string};
     sourceContainers: {container: Container, source: Source}[];
     sourceContainerConSites: {conSite: ConstructionSite, source: Source}[];
     sourceLinks: {link: Link, source: Source}[];

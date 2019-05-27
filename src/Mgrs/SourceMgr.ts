@@ -37,10 +37,10 @@ export class SourceMgr {
                 body = this._roomManager.baseRoomSpawn.createWorkerBody(1, 2, 2, [CARRY, MOVE, WORK], false);
             }
             else if (harvesters.length == 0 && transporters.length == 1) {
-                body = this._roomManager.baseRoomSpawn.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], false);
+                body = this._roomManager.baseRoomSpawn.createWorkerBody(5, 1, 6, [WORK, MOVE, CARRY], false);
             }
             else {
-                body = this._roomManager.baseRoomSpawn.createWorkerBody(5, 3, 6, [WORK, MOVE, CARRY], true)
+                body = this._roomManager.baseRoomSpawn.createWorkerBody(5, 1, 6, [WORK, MOVE, CARRY], true)
             }
 
             let prespawnNeeded = this.checkHarvesterPrespawn(source, body);
@@ -79,7 +79,7 @@ export class SourceMgr {
                     }
                 }
 
-                let sourceContainer = this._roomManager.StashMgr.getContainerForSource(source);
+                let sourceContainer = this._roomManager.stashMgr.getContainerForSource(source);
                 let leftoverDroppedEnergy = this.getLeftoverDroppedEnergyForSource(source);
                 let leftoverContainerEnergy = this.getLeftoverEnergyForContainer(sourceContainer);
                 // console.log('Leftover Container Energy: ' + leftoverContainerEnergy + ' - ' + source.pos);
@@ -148,7 +148,7 @@ export class SourceMgr {
         if (container != undefined) {
             // See how much energy is left over after counting for all transporters that need energy for this source
             // Get all of the transporters for this source/container
-            let containerTransporters: Creep[] = container.transportersForContainer(this._roomManager.transporters, this._roomManager.StashMgr.sourceContainers)
+            let containerTransporters: Creep[] = container.transportersForContainer(this._roomManager.transporters, this._roomManager.stashMgr.sourceContainers)
             // Keep only the transporters that are currently collecting from this container
             containerTransporters.filter(transporter => {
                 return transporter.memory.CollectionTargetID == container.id;

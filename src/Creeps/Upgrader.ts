@@ -39,8 +39,8 @@ export class Upgrader extends Screep{
             this.creep.say('⚙️Collect');
         }
 
-        let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
-        let controllerContainer = this.roomMgr.StashMgr.controllerContainer;
+        let spawnContainer = this.roomMgr.stashMgr.spawnContainer;
+        let controllerContainer = this.roomMgr.stashMgr.controllerContainer;
 
         // * Upgrade room controller
         if (this.Status == CreepStatus.Upgrading) {
@@ -68,7 +68,7 @@ export class Upgrader extends Screep{
             }
 
             // * Check for dropped energy around the spawn drop position
-            let dropPosition: RoomPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
+            let dropPosition: RoomPosition = this.roomMgr.stashMgr.getSpawnContainerPos();
             let energyFound = this.checkForDroppedEnergy(dropPosition);
             if (energyFound != undefined) {
                 this.CollectionTargetID = energyFound.id;

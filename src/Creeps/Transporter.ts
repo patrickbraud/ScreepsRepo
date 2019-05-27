@@ -43,12 +43,12 @@ export class Transporter extends Screep{
         super(creep, roomManager);
         this.Status = creep.memory.Status;
         this.TargetSourceID = creep.memory.TargetSourceID;
-        super.pathColor = "#00FFFF";
+        super.pathColor = "#green";
 
         this._targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
 
         // If this source has a container, store its info
-        this._targetContainer = this.roomMgr.StashMgr.getContainerForSource(this._targetSource);
+        this._targetContainer = this.roomMgr.stashMgr.getContainerForSource(this._targetSource);
         if (this._targetContainer != undefined) {
             this.TargetContainerID = this._targetContainer.id;
         }
@@ -98,7 +98,7 @@ export class Transporter extends Screep{
 
             // * if the room spawn DOES have a container
             //   - deposit into container if not full
-            let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
+            let spawnContainer = this.roomMgr.stashMgr.spawnContainer;
             if (spawnContainer != undefined && spawnContainer.store[RESOURCE_ENERGY] < spawnContainer.storeCapacity) {
                 this.deposit(spawnContainer);
                 return;
@@ -107,7 +107,7 @@ export class Transporter extends Screep{
             // * if the room controller DOES have a container
             //   - deposit into container if not full
             if (this.roomMgr.distributors.length == 0) {
-                let controllerContainer = this.roomMgr.StashMgr.controllerContainer;
+                let controllerContainer = this.roomMgr.stashMgr.controllerContainer;
                 if (controllerContainer != undefined && controllerContainer.store[RESOURCE_ENERGY] < controllerContainer.storeCapacity) {
                     this.deposit(controllerContainer);
                     return;
@@ -115,9 +115,10 @@ export class Transporter extends Screep{
             }
 
             // * move to spawn and drop energy
-            let dropPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
+            let dropPosition = this.roomMgr.stashMgr.getSpawnContainerPos();
             if (!this.creep.pos.isEqualTo(dropPosition)) {
-                this.creep.moveTo(dropPosition, {reusePath: 15, visualizePathStyle: {stroke: this.pathColor, lineStyle: undefined}});
+                //this.creep.moveTo(dropPosition, {reusePath: 15, visualizePathStyle: {stroke: this.pathColor, lineStyle: undefined}});
+                this.creep.moveTo(dropPosition, {reusePath: 15});
             }
             else {
                 this.creep.drop(RESOURCE_ENERGY);

@@ -40,9 +40,9 @@ export class Harvester extends Screep {
         super.pathColor = "#4af900"
 
         this._targetSource = this.roomMgr.sourceMgr.getSourceByID(this.TargetSourceID);
-        this._container = this.roomMgr.StashMgr.getContainerForSource(this._targetSource);
-        this._link = this.roomMgr.StashMgr.getLinkForSource(this._targetSource);
-        this._spawnLink = this.roomMgr.StashMgr.spawnLink;
+        this._container = this.roomMgr.stashMgr.getContainerForSource(this._targetSource);
+        this._link = this.roomMgr.stashMgr.getLinkForSource(this._targetSource);
+        this._spawnLink = this.roomMgr.stashMgr.spawnLink;
 
         if (this._link != undefined) {
             // If the source link is full, not on cooldown, and the spawn link exists

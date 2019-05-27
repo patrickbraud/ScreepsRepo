@@ -5,12 +5,16 @@ import { StashMgr } from "./StashMgr";
 import { CreepMgr } from "./CreepMgr";
 import { CreepStatus } from "Enums/CreepEnums";
 import { DefenseMeasures } from "Defenses/DefenseMeasures";
+import { MineMgr } from "./MineMgr";
 
 // Manages the rooms for a colony
 export class RoomMgr {
 
     public colony: Colony;
     public baseRoom: Room;
+
+    public exits: {[direction: string]: string};
+
     public baseRoomSpawn: Spawn;
     public baseRoomController: Controller;
     public baseRoomStructures: Structure[];
@@ -31,27 +35,28 @@ export class RoomMgr {
     public towers: StructureTower[];
 
     public sourceMgr: SourceMgr;
-    public StashMgr: StashMgr;
+    public stashMgr: StashMgr;
+    public mineMgr: MineMgr;
 
     constructor(colony: Colony) {
         this.colony = colony;
         this.baseRoom = colony.spawn.room;
+        this.exits = this.baseRoom.exits;
         this.baseRoomSpawn = colony.spawn;
         this.baseRoomController = colony.spawn.room.controller;
         this.loadCreeps();
         this.loadStructures();
 
-        this.loadRoomMemory();
-
         this.sourceMgr = new SourceMgr(this);
-        this.StashMgr = new StashMgr(this);
+        this.stashMgr = new StashMgr(this);
+        this.mineMgr = new MineMgr(this);
 
         this.defenseMeasures = new DefenseMeasures(this);
     }
 
     runRooms() {
         // Create structures
-        this.StashMgr.createNeededStashes();
+        this.stashMgr.createNeededStashes();
 
         // Create creeps
         if (this.sourceMgr.spawnNeededHarvesters()) { return;}
@@ -69,7 +74,7 @@ export class RoomMgr {
         let targetStructures: Structure[] = [];
 
         // Add our containers that need energy
-        let sortedContainers = this.StashMgr.containers.sort((a: Structure, b: Structure): number => {
+        let sortedContainers = this.stashMgr.containers.sort((a: Structure, b: Structure): number => {
             return (screep.distanceTo(a.pos) - screep.distanceTo(b.pos))
         });
         sortedContainers = sortedContainers.filter(container => {
@@ -146,15 +151,11 @@ export class RoomMgr {
         }
     }
 
-    loadRoomMemory() {
-
-    }
-
     spawnNeededUpgraders(): Boolean {
         if (this.transporters.length > 0 && this.upgraders.length < 4) {
 
             let totalLeftoverEnergy: number = 0;
-            if (this.StashMgr.controllerContainer != undefined) {
+            if (this.stashMgr.controllerContainer != undefined) {
                 let leftoverControllerEnergy = this.getLeftoverControllerEnergy();
                 totalLeftoverEnergy = leftoverControllerEnergy;
                 //console.log('Leftover Controller Energy: ' + leftoverControllerEnergy);
@@ -215,7 +216,7 @@ export class RoomMgr {
             leftoverSpawnEnergy -= CreepMgr.bodyCost(body);
             // If we have enough leftover energy to justify a new builder and we are under our builder limit
             if (leftoverSpawnEnergy >= newCreepCarryCapacity) {
-                for (let conSite of this.StashMgr.containerConstructionSites) {
+                for (let conSite of this.stashMgr.containerConstructionSites) {
 
                     let buildersTargetingSite = this.builders.filter(builder => {
                         return builder.memory.PrioritySiteID == conSite.id;
@@ -242,7 +243,7 @@ export class RoomMgr {
         }
 
         if (this.baseRoomController.level >= 5) {
-            if (this.distributors.length < 2 && this.StashMgr.sourceLinks.length >= 2) {
+            if (this.distributors.length < 2 && this.stashMgr.sourceLinks.length >= 2) {
                 this._spawnDistributor();
                 return true;
             }
@@ -293,12 +294,12 @@ export class RoomMgr {
 
         let leftoverSpawnContainerEnergy: number = 0;
         // Get the amount of energy available in the spawn container
-        let spawnContainer: Container = this.StashMgr.spawnContainer;
+        let spawnContainer: Container = this.stashMgr.spawnContainer;
         if (spawnContainer != undefined) {
             let spawnContainerEnergy: number = 0;
             spawnContainerEnergy = spawnContainer.store[RESOURCE_ENERGY];
-            if (this.StashMgr.spawnLink != undefined) {
-                spawnContainerEnergy += this.StashMgr.spawnLink.energy;
+            if (this.stashMgr.spawnLink != undefined) {
+                spawnContainerEnergy += this.stashMgr.spawnLink.energy;
             }
 
             if (spawnContainerEnergy > 0) {
@@ -321,7 +322,7 @@ export class RoomMgr {
 
         let leftoverDroppedSpawnEnergy: number = 0;
         // Get the amount of dropped energy at the spawn container location
-        let dropPosition = this.StashMgr.getSpawnContainerPos();
+        let dropPosition = this.stashMgr.getSpawnContainerPos();
         let energyFound: Resource[] = this.baseRoom.lookForAt(RESOURCE_ENERGY, dropPosition);
         if (energyFound.length > 0) {
             let droppedSpawnEnergy: number = energyFound[0].amount;
@@ -350,7 +351,7 @@ export class RoomMgr {
 
         let leftoverControllerContainer: number = 0;
         // Get the amount of energy available in the controller container
-        let controllerContainer: Container = this.StashMgr.controllerContainer;
+        let controllerContainer: Container = this.stashMgr.controllerContainer;
         if (controllerContainer != undefined) {
             let controllerContainerEnergy: number = 0;
             controllerContainerEnergy = controllerContainer.store[RESOURCE_ENERGY];
@@ -375,7 +376,7 @@ export class RoomMgr {
 
         let leftoverDroppedControllerEnergy: number = 0;
         // Get the amount of dropped energy at the spawn container location
-        let dropPosition = this.StashMgr.getControllerContainerPos();
+        let dropPosition = this.stashMgr.getControllerContainerPos();
         let [energyFound] = this.baseRoom.lookForAt(RESOURCE_ENERGY, dropPosition);
         if (energyFound != undefined) {
             let droppedControllerEnergy: number = energyFound.amount;

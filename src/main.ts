@@ -19,5 +19,4 @@ module.exports.loop = function() {
     console.log('------------------------------------------')
     //GlobalValues.loadGlobals();
     GameManager.Start();
-
 };

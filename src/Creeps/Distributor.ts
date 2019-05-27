@@ -24,19 +24,19 @@ export class Distributor extends Screep {
 
         if (this.Status == CreepStatus.Collecting) {
 
-            let spawnLink = this.roomMgr.StashMgr.spawnLink;
+            let spawnLink = this.roomMgr.stashMgr.spawnLink;
             if (spawnLink != undefined && spawnLink.energy > 0) {
                 this.collectFromStructure(spawnLink);
                 return;
             }
 
-            let sourceEnergy = this.checkForDroppedEnergy(this.roomMgr.StashMgr.getSpawnContainerPos());
+            let sourceEnergy = this.checkForDroppedEnergy(this.roomMgr.stashMgr.getSpawnContainerPos());
             if (sourceEnergy != undefined) {
                 this.pickUpEnergy(sourceEnergy);
                 return;
             }
 
-            let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
+            let spawnContainer = this.roomMgr.stashMgr.spawnContainer;
             if (spawnContainer != undefined && spawnContainer.store.energy > 0) {
                 this.collectFromStructure(spawnContainer);
                 return;
@@ -65,7 +65,7 @@ export class Distributor extends Screep {
             }
 
 
-            let controllerContainer = this.roomMgr.StashMgr.controllerContainer;
+            let controllerContainer = this.roomMgr.stashMgr.controllerContainer;
             if (controllerContainer != undefined && controllerContainer.store.energy < controllerContainer.storeCapacity) {
                 this.depositIntoContainer(controllerContainer);
                 return;

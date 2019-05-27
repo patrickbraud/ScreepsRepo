@@ -90,7 +90,7 @@ export class Builder extends Screep {
         else if (this.Status == CreepStatus.Collecting) {
 
             // * Check for dropped energy around the spawn drop position
-            let dropPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
+            let dropPosition = this.roomMgr.stashMgr.getSpawnContainerPos();
             let spawnDropEnergy = this.checkForDroppedEnergy(dropPosition);
             if (spawnDropEnergy != undefined) {
                 this.CollectionTargetID = spawnDropEnergy.id;
@@ -99,7 +99,7 @@ export class Builder extends Screep {
             }
 
             // * if the room spawn DOES have a container
-            let spawnContainer = this.roomMgr.StashMgr.spawnContainer;
+            let spawnContainer = this.roomMgr.stashMgr.spawnContainer;
             if (spawnContainer != undefined && spawnContainer.store[RESOURCE_ENERGY] > 0) {
                 // 	 - collect from spawn container if it has energy
                 this.CollectionTargetID = spawnContainer.id;
@@ -107,7 +107,7 @@ export class Builder extends Screep {
                 return;
             }
 
-            let spawnlink = this.roomMgr.StashMgr.spawnLink;
+            let spawnlink = this.roomMgr.stashMgr.spawnLink;
             if (spawnlink != undefined && spawnlink.energy > 0) {
                 this.CollectionTargetID = spawnlink.id;
                 this.collectFromStructure(spawnlink);
@@ -126,7 +126,7 @@ export class Builder extends Screep {
     checkForClosestDroppedEnergy(): Resource {
         let droppedEnergy: Resource[] = [];
 
-        let dropPosition = this.roomMgr.StashMgr.getSpawnContainerPos();
+        let dropPosition = this.roomMgr.stashMgr.getSpawnContainerPos();
         let spawnDropEnergy = this.checkForDroppedEnergy(dropPosition);
         if (spawnDropEnergy != undefined) {
             droppedEnergy.push(spawnDropEnergy);
