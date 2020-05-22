@@ -1,6 +1,5 @@
 import {GameManager} from './GameManager';
-//import { GlobalValues } from 'Globals/GlobalValues';
-import { initPrototypes } from 'Prototypes/initPrototypes';
+import { initPrototypes } from './Prototypes/initPrototypes';
 //declare var module: any;
 
 /*
@@ -17,6 +16,5 @@ initPrototypes();
 module.exports.loop = function() {
 
     console.log('------------------------------------------')
-    //GlobalValues.loadGlobals();
     GameManager.Start();
 };

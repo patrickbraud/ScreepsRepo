@@ -1,6 +1,4 @@
-//import { GlobalValues } from "Globals/GlobalValues";
-import { Colony } from "Colony";
-//import { Global } from "Global";
+import { Colony } from "./Colony";
 
 export namespace GameManager {
 
@@ -12,52 +10,37 @@ export namespace GameManager {
     export var spawnCount: number;
 
     export function Start() {
-        loadSpawns();
-        // Load all of our colonies
-        loadColonies();
-        console.log('Colonies: ' + colonies.length);
 
-        colonies.forEach(colony => {
-            colony.runColony();
-        })
+        geatSpawns();
 
-        // console.log('SOURCE_GOAL_OWNED: ' + Global.SOURCE_GOAL_OWNED);
-        // console.log('SOURCE_GOAL_NEUTRAL: ' + Global.SOURCE_GOAL_NEUTRAL);
-        // console.log('SOURCE_GOAL_KEEPER: ' + Global.SOURCE_GOAL_KEEPER);
+        // Create the colonies
+        initializeColonies();
 
-        // console.log('SOURCE_HARVEST_PARTS: ' + Global.SOURCE_HARVEST_PARTS);
-        // console.log('SOURCE_HARVEST_PARTS_NEUTRAL: ' + Global.SOURCE_HARVEST_PARTS_NEUTRAL);
-        // console.log('SOURCE_HARVEST_PARTS_KEEPER: ' + Global.SOURCE_HARVEST_PARTS_KEEPER);
-
-        // console.log('SOURCE_CARRY_PARTS_PER_DISTANCE_OWNED: ' + Global.SOURCE_CARRY_PARTS_PER_DISTANCE_OWNED);
-        // console.log('SOURCE_CARRY_PARTS_PER_DISTANCE_NEUTRAL: ' + Global.SOURCE_CARRY_PARTS_PER_DISTANCE_NEUTRAL);
-        // console.log('SOURCE_CARRY_PARTS_PER_DISTANCE_KEEPER: ' + Global.SOURCE_CARRY_PARTS_PER_DISTANCE_KEEPER);
-
-        // console.log('RAMPART_UPKEEP: ' + Global.RAMPART_UPKEEP);
-        // console.log('ROAD_UPKEEP: ' + Global.ROAD_UPKEEP);
-        // console.log('ROAD_UPKEEP_SWAMP: ' + Global.ROAD_UPKEEP_SWAMP);
-        // console.log('CONTAINER_UPKEEP: ' + Global.CONTAINER_UPKEEP);
-        // console.log('REMOTE_CONTAINER_UPKEEP: ' + Global.REMOTE_CONTAINER_UPKEEP);
-
+        // initialize all objects for each colony
+        // Find operations only
+        colonies.forEach(colony => colony.initialize())
+        colonies.forEach(colony => colony.checkWorkStatus())
+        colonies.forEach(colony => colony.performJobs())
+        colonies.forEach(colony => colony.satisfyWorkRequests())
     }
 
-    function loadColonies() {
+    function initializeColonies() {
+        colonyCount = 0;
         colonies = [];
-        colonyCount = spawnCount;
         for(let name in spawns) {
             let spawn = Game.spawns[name];
+            colonyCount += 1;
             colonies.push(new Colony(spawn));
         }
     }
 
-    function loadSpawns() {
+    function geatSpawns() {
         spawns = Game.spawns;
-        spawnCount = _.size(spawns);
 
-        loadSpawnNames();
+        getSpawnNames();
     }
 
-    function loadSpawnNames() {
+    function getSpawnNames() {
         spawnNames = [];
         for (let spawnName in spawns) {
             if (spawns.hasOwnProperty(spawnName)) {

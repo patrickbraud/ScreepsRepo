@@ -35,6 +35,4 @@ Upgrade: 15 (15 * WORK)
 Repair: 2 (2 * WORK)
 Surplus: +3 / tick
 
-Stadium.SuperBowl52, Stadium.EstadioAzteca
-
 

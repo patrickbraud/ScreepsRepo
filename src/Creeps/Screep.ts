@@ -1,135 +1,16 @@
-import { CreepStatus } from "Enums/CreepEnums";
-import { RoomMgr } from "Mgrs/RoomMgr";
-import { RoomUtils } from "Mgrs/RoomUtils";
+import { Colony } from "../Colony";
 
 export class Screep{
 
     creep: Creep;
-
-    roomMgr: RoomMgr;
-
-    // MovePath property
-    private _movePath: PathStep[];
-    get MovePath(): PathStep[] {
-        return this._movePath;
-    }
-    set MovePath(path: PathStep[]) {
-        this._movePath = path;
-        this.creep.memory.MovePath = Room.serializePath(path);
-    }
-
-    // MoveID Property
-    private _moveID: string;
-    get MoveID(): string {
-        return this._moveID;
-    }
-    set MoveID(targetID: string) {
-        this._moveID = targetID;
-        this.creep.memory.MoveID = targetID;
-    }
-
-    // PreviousPos Property
-    private _previousPos: RoomPosition;
-    get PreviousPos(): RoomPosition {
-        return this._previousPos;
-    }
-    set PreviousPos(pos: RoomPosition) {
-        if (pos == undefined) {
-            pos = this.creep.pos;
-        }
-        this._previousPos = pos;
-        this.creep.memory.PreviousPos = pos;
-    }
-
-    // PreviousMoveResult Property
-    private _previousMoveResult: number;
-    get PreviousMoveResult(): number {
-        return this._previousMoveResult;
-    }
-    set PreviousMoveResult(moveResult: number) {
-        if (moveResult == undefined) {
-            moveResult = OK;
-        }
-        this._previousMoveResult = moveResult;
-        this.creep.memory.PreviousMoveResult = moveResult;
-    }
-
-    // Status property
-    private _status: CreepStatus = null;
-    get Status() {
-        return this._status;
-    }
-    set Status(currentStatus: CreepStatus) {
-        this._status = currentStatus;
-        this.creep.memory.Status = currentStatus;
-    }
+    colony: Colony;
 
     pathColor: string;
 
-    constructor(creep: Creep, roomManager: RoomMgr)
+    constructor(creep: Creep, colony: Colony)
     {
         this.creep = creep;
-        this.roomMgr = roomManager
-        this.MoveID = creep.memory.MoveID;
-        if (creep.memory.MovePath != undefined) {
-            this.MovePath = Room.deserializePath(creep.memory.MovePath as string);
-        }
-        // console.log('PrevPos: ' + creep.memory.PreviousPos);
-        this.PreviousPos = creep.memory.PreviousPos;
-        this.PreviousMoveResult = creep.memory.PreviousMoveResult;
-    }
-
-    moveTo(target: any, pathColor?: string) {
-        //console.log('I should be moving');
-
-        // Check if we have a new target than the previous tick
-        let newTarget: boolean = !(target.id == this.MoveID);
-        let gotStuck: boolean = this.checkIfStuck()
-
-        // If we got a new target, or our last move was considered
-        // a success but we are still in the same spot, get a new path
-        if (newTarget || gotStuck)
-        {
-            //console.log('New Target: ' + newTarget);
-            this.updateTarget(target);
-        }
-
-        this.moveToTarget();
-
-        if (pathColor) {
-            // Draw the path from our creep to it's target
-            //this.printPath(pathColor);
-        }
-    }
-
-    updateTarget(target: any) {
-        // console.log('Performing FIND Operation');
-        this.MoveID = target.id;
-
-        this.MovePath = this.creep.room.findPath(this.creep.pos, target.pos, { ignoreCreeps: false });
-    }
-
-    printPath(color: string) {
-
-        let creepPosReached: boolean = false;
-        for (let step1 = 0, step2 = 1; step2 < this.MovePath.length; step1++, step2++) {
-            // Skip all path steps up to and including our creep position
-            if (this.MovePath[step1].x == this.creep.pos.x && this.MovePath[step1].y == this.creep.pos.y) {
-                creepPosReached = true;
-                continue;
-            }
-
-            if (creepPosReached) {
-                this.creep.room.visual.line(this.MovePath[step1].x, this.MovePath[step1].y, this.MovePath[step2].x, this.MovePath[step2].y, {color: color });
-            }
-        }
-    }
-
-    moveToTarget() {
-        let moveResult: number = this.creep.moveByPath(this.MovePath);
-        this.PreviousMoveResult = moveResult;
-        this.PreviousPos = this.creep.pos;
-        return moveResult;
+        this.colony = colony;
     }
 
     checkIfStuck(): boolean {
@@ -150,24 +31,5 @@ export class Screep{
 
     checkSamePos(pos1: RoomPosition, pos2: RoomPosition) {
         return (pos1.x == pos2.x && pos1.y == pos2.y);
-    }
-
-    checkForDroppedEnergy(dropPosition: RoomPosition): Resource {
-        let possiblePositions = RoomUtils.validPositions(dropPosition, ['wall']);
-        for (let pos of possiblePositions) {
-            let energyFound = this.creep.room.lookForAt(LOOK_ENERGY, pos);
-            if (energyFound.length > 0) {
-                energyFound.sort((a: Resource, b: Resource): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
-                return energyFound[0] as Resource;
-            }
-        }
-        return undefined;
-    }
-
-    pickUpEnergy(energy: Resource) {
-        let pickUpResult = this.creep.pickup(energy);
-        if (pickUpResult == ERR_NOT_IN_RANGE) {
-            this.moveTo(energy, this.pathColor);
-        }
     }
 }
