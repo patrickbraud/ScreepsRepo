@@ -19,7 +19,8 @@ export namespace GameManager {
         // initialize all objects for each colony
         // Find operations only
         colonies.forEach(colony => colony.initialize())
-        colonies.forEach(colony => colony.checkWorkStatus())
+        colonies.forEach(colony => colony.checkJobStatus())
+        colonies.forEach(colony => colony.assignWorkers())
         colonies.forEach(colony => colony.performJobs())
         colonies.forEach(colony => colony.satisfyWorkRequests())
     }

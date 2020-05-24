@@ -2,6 +2,7 @@ import { GameManager } from "./GameManager";
 import { Spawner } from "./Spawner";
 import { Harvester } from "./Creeps/Harvester";
 import { JobBoard } from "./JobBoard";
+import { JobType } from "./Enums/JobType";
 
 export class Colony {
 
@@ -103,30 +104,56 @@ export class Colony {
         this.droppedEnergy = this.getResourcesOfType(RESOURCE_ENERGY);
     }
 
-    checkWorkStatus(){
+    checkJobStatus(){
 
-        this.jobBoard.veryifyJobWorkers();
+        // Before everything checks their jobs, 
+        // make sure all creeps that were previously working still exist
+        this.jobBoard.verifyWorkersExist();
 
         // Check if all sources have a worker assigned to them
         // If not, a worker request is returned
         this.sources.forEach(source => {
-            let currentJobs = this.jobBoard.getJobs(source.id);
 
-            // TODO: Give all relevent jobs to the source to decide
-            let newJob = source.checkJobStatus(currentJobs);
-            if (newJob != undefined) this.jobBoard.postJob(newJob)
+            let currentJobs = this.jobBoard.getJobs(JobType.Harvest, source.id);
+            let newJob = source.checkHarvestJobs(currentJobs);
+            if (newJob) {
+                 this.jobBoard.postJob(source.id, newJob);
+            }
+        });
+        
+        // All dropped energy updates it's job listing or creates one if it doesn't exist to pick them up
+        this.droppedEnergy.forEach(energy => {
+
+            let droppedEnergyJobs = this.jobBoard.getJobs(JobType.DroppedEnergy, energy.id);
+            let currentJob = undefined;
+            if (droppedEnergyJobs) currentJob = droppedEnergyJobs[0]
+
+            let newJob = energy.updateDroppedEnergyJob(currentJob);
+            if (newJob) this.jobBoard.postJob(energy.id, newJob);
         });
 
-        // Hire any needed workers for new jobs that were posted
-        this.jobBoard.hireWorkers();
+
+        // Spawns update their energy required job listing, or post one if it doesn't exist
+        let spawnDeposits = this.jobBoard.getJobs(JobType.EnergyRequired, this.mainSpawn.id);
+        let currentJob = undefined;
+        if (spawnDeposits) currentJob = spawnDeposits[0]
+        
+        let newSpawnDeposit = this.mainSpawn.checkEnergyRequirements(currentJob);
+        if (newSpawnDeposit) this.jobBoard.postJob(this.mainSpawn.id, newSpawnDeposit);
+    }
+
+    assignWorkers() {
+
+        // Assigne idle and Hire any needed workers
+        this.jobBoard.assignWorkers();
     }
 
     performJobs() {
         this.creeps.forEach(creep => {
 
-            let job = this.jobBoard.getJob(creep.memory.jobId, creep.memory.identifier);
+            let job = this.jobBoard.getWorkerJob(creep);
             if (job) {
-                switch (job.jobTitle) {
+                switch (job.jobType) {
 
                     case "Harvest":
                         let harvester = new Harvester(creep, this);

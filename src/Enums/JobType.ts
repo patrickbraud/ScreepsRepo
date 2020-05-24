@@ -1,5 +1,5 @@
 export enum JobType{
     Harvest = "Harvest",
-    Pickup = "Pickup",
-    Deposit = "Deposit"
+    DroppedEnergy = "DroppedEnergy",
+    EnergyRequired = "EnergyRequired"
 }

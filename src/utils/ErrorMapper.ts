@@ -1,5 +1,5 @@
 // tslint:disable:no-conditional-assignment
-import { SourceMapConsumer } from "source-map";
+import { SourceMapConsumer } from "../../node_modules/source-map";
 
 export class ErrorMapper {
   // Cache consumer

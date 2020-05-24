@@ -1,5 +1,6 @@
 import { Colony } from "./Colony";
 import { JobStatus } from "./Enums/JobStatus";
+import { JobType } from "./Enums/JobType";
 
 export class Spawner {
 
@@ -7,7 +8,7 @@ export class Spawner {
     public mainRoom: Room;
     public mainSpawn: StructureSpawn;
 
-    public spawnRequests: {[jobId: string]: {identifier: number, jobTitle: string, body: number[]}[]};
+    public spawnRequests: {[jobId: string]: {identifier: number, jobType: string, body: number[]}[]};
 
     constructor(colony: Colony) {
         this.colony = colony;
@@ -38,16 +39,17 @@ export class Spawner {
         if (request == undefined) return;
 
         let body: BodyPartConstant[] = [];
-        switch(request.jobTitle) {
-            case "Harvest": body = this.mainSpawn.createHarvesterBody(request.body[0], request.body[1], request.body[2]); break;
+        switch(request.jobType) {
+            case "Harvest": body = this.mainSpawn.createHarvestBody(request.body[0], request.body[1], request.body[2]); break;
         }
 
         let workerSpawnOpts = {
+            jobType: request.jobType,
             jobId: jobId,
             identifier: request.identifier
         };
 
-        let creepName = this.mainSpawn.generateCreepName(request.jobTitle, this.mainSpawn.memory.colonyId)
+        let creepName = this.mainSpawn.generateCreepName(request.jobType, this.mainSpawn.memory.colonyId)
 
         let canSpawn = this.mainSpawn.spawnCreep(body, creepName, { dryRun: true });
         if (canSpawn == OK){
@@ -55,25 +57,21 @@ export class Spawner {
             canSpawn = this.mainSpawn.spawnCreep(body, creepName, { memory: workerSpawnOpts });
 
             // Update the job status to Spawning and update the body with what was actually created
-            this.colony.jobBoard.updateJobStatusAndBody(jobId, request.identifier, JobStatus.Spawning, body);
+            this.colony.jobBoard.updateJobStatusAndBody(request.jobType, jobId, request.identifier, JobStatus.Spawning, body);
             
             // Remove the fulfilled  spawn request from memory
             this.removeSpawnRequest(jobId, request.identifier);
         }
         else {
-            console.log("Spawn pending: ");
-            console.log("JobId: " + workerSpawnOpts.jobId)
-            console.log("Identifier: " + workerSpawnOpts.identifier);
-            console.log("JobTitle: " + request.jobTitle)
-            console.log("Body: " + body.toString());
+            console.log("SpawnPending: \t" + jobId + "\t- JobType: " + workerSpawnOpts.jobType + "\t- Body: " + body.toString());
         }
     }
 
-    addSpawnRequest(newRequest: {identifier: number, jobId: string, jobTitle: string, body: number[]}) {
+    addSpawnRequest(jobId: string, newRequest: any) {
 
         let newSpawnRequest = {
             identifier: newRequest.identifier,
-            jobTitle: newRequest.jobTitle,
+            jobType: newRequest.jobType,
             body: newRequest.body
         };
 
@@ -88,7 +86,7 @@ export class Spawner {
             spawnRequestsForJob.push(newSpawnRequest);
         }
 
-        this.colony.jobBoard.updateJobStatus(newRequest.jobId, newRequest.identifier, JobStatus.SpawnQueue);
+        this.colony.jobBoard.updateJobStatus(newRequest.jobType, newRequest.jobId, newRequest.identifier, JobStatus.SpawnQueue);
         console.log("Spawn request received: " + newRequest.jobId);
     }
 

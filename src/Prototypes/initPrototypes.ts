@@ -3,6 +3,7 @@ import { roomPrototypes } from "./roomPrototypes";
 import { sourcePrototypes } from "./sourcePrototypes";
 import { spawnPrototypes } from "./spawnPrototypes";
 import { containerPrototypes } from "./containerProrotypes";
+import { resourcePrototypes } from "./resourcePrototype";
 
 export function initPrototypes() {
     creepPrototypes();
@@ -10,4 +11,5 @@ export function initPrototypes() {
     sourcePrototypes();
     spawnPrototypes();
     containerPrototypes();
+    resourcePrototypes();
 }

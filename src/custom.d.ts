@@ -1,18 +1,20 @@
 interface Memory {
-    spawnRequests: {[jobId: string]: {identifier: number, jobTitle: string, body: number[]}[]};
-    jobs: {[jobId: string]: {identifier: number, jobTitle: string, body: number[], status: string}[]};
 }
 
 interface Source {
     // Body is [W, C, M]
-    checkJobStatus(currentJobs: {identifier: number, jobTitle: string, body: number[]}[] | undefined): {identifier: number, jobId: string, jobTitle: string, body: number[] } | undefined;
+    checkHarvestJobs(currentJobs: any[] | undefined)
+    : any | undefined;
+
     totalWorkParts: number;
     harvestLocations: {x: number, y: number}[];
 }
 
 interface Room {
-    spawnRequests: {[jobId: string]: {identifier: number, jobTitle: string, body: number[]}[]};
-    jobs: {[jobId: string]: {identifier: number, jobTitle: string, body: number[], status: string}[]};
+    spawnRequests: {[jobId: string]: {identifier: number, jobType: string, body: number[]}[]};
+    jobs: {[jobType: string]: {[jobId: string]: any[]}};
+    // jobs: {[jobType: string]: {[jobId: string]: {identifier: number, jobType: string, body: number[], status: string}[]}};
+    //jobs: {[jobId: string]: {identifier: number, jobType: string, body: number[], status: string}[]};
     sourcesInRoom: Source[];
     exits: {[direction: string]: string};
 }
@@ -22,8 +24,16 @@ interface Creep {
 }
 
 interface StructureSpawn {
-    createHarvesterBody(maxWork: number, maxCarry: number, maxMove: number): BodyPartConstant[];
+    checkEnergyRequirements(currentJobs: any | undefined) : any | undefined;
+
+    createHarvestBody(maxWork: number, maxCarry: number, maxMove: number): BodyPartConstant[];
     generateCreepName(role: string, colonyId: string): string;
+}
+
+interface Resource {
+    updateDroppedEnergyJob(droppedEnergyJob: any[] | undefined): any | undefined;
+    incomeHistory: number[];
+    averageIncomePerTick: number;
 }
 
 interface StructureContainer {

@@ -5,9 +5,9 @@ export class Harvester extends Screep {
 
     jobIdentifier: number;
     jobId: string;
-    jobTitle: string;
+    jobType: string;
 
-    currentJob: {identifier: number, jobTitle: string, body: number[], status: string} | undefined;
+    currentJob: {identifier: number, jobType: string, body: number[], status: string} | undefined;
 
     creep: Creep;
     colony: Colony;
@@ -30,12 +30,10 @@ export class Harvester extends Screep {
         
         this.harvest(targetSource);
 
-
-        
-        if (this.creep.ticksToLive == 1) {
-            this.creep.say("Dying");
-            this.colony.jobBoard.removeJob(this.jobId, this.jobIdentifier);
-        }
+        // if (this.creep.ticksToLive == 1) {
+        //     this.creep.say("Dying");
+        //     this.colony.jobBoard.removeJob(this.jobType, this.jobId, this.jobIdentifier);
+        // }
     }
 
     repairContainerIfNeeded(container: StructureContainer): Boolean {

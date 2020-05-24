@@ -1,3 +1,6 @@
+import { JobType } from "../Enums/JobType";
+import { JobStatus } from "../Enums/JobStatus";
+
 export function sourcePrototypes() {
 
     Object.defineProperty(Source.prototype, 'memory', {
@@ -23,48 +26,10 @@ export function sourcePrototypes() {
         }
     });
 
-    Object.defineProperty(Source.prototype, 'totalWorkParts', {
-        get: function (): number {
-            if (this._totalWorkParts == undefined) {
-                this._totalWorkParts = 0;
-            }
-            return this._totalWorkParts;
-        },
-        set: function(value: number): void {
-            this._totalWorkParts = value;
-        },
-        enumerable: false,
-        configurable: true
-    });
 
-    Source.prototype.checkJobStatus = function(currentJobs: {identifier: number, jobTitle: string, body: number[]}[] | undefined)
-    : {identifier: number, jobId: string, jobTitle: string, body: number[]} | undefined {
 
-        let maxWorkerCount = this.harvestLocations.length;
+    // TODO: Create a rolling average of energy harvested per tick
 
-        let newJob = {
-            identifier: Math.floor(Math.random() * 100000),
-            jobId: this.id,
-            jobTitle: 'Harvest',
-            targetId: this.id,
-            body: [5, 1, 3],
-        };
-        
-        if (!currentJobs) return newJob;
-
-        currentJobs.forEach(job => {
-            let workParts: number = job.body[0];
-            this.totalWorkParts += workParts;
-        })
-
-        if (this.totalWorkParts < 5 && currentJobs.length < maxWorkerCount) {
-
-            console.log("Source: " + this.id + "- Submitting request for [5] WORK parts.");
-            return newJob
-        }
-
-        return undefined;
-    }
 
     Object.defineProperty(Source.prototype, 'harvestLocations', {
         get: function (): number {
@@ -94,4 +59,50 @@ export function sourcePrototypes() {
         enumerable: false,
         configurable: true
     });
+
+    Object.defineProperty(Source.prototype, 'totalWorkParts', {
+        get: function (): number {
+            if (this._totalWorkParts == undefined) {
+                this._totalWorkParts = 0;
+            }
+            return this._totalWorkParts;
+        },
+        set: function(value: number): void {
+            this._totalWorkParts = value;
+        },
+        enumerable: false,
+        configurable: true
+    });
+
+    Source.prototype.checkHarvestJobs = function(currentJobs: any[] | undefined) : any | undefined {
+
+        let maxWorkerCount = this.harvestLocations.length;
+
+        let newJob = {
+            jobId: this.id,
+            jobType: JobType.Harvest,
+            identifier: Math.floor(Math.random() * 100000000),
+            targetId: this.id,
+            body: [5, 1, 6],
+            status: JobStatus.Open
+        };
+        
+        if (!currentJobs || currentJobs.length == 0) {
+            console.log("Source: " + this.id + "- Submitting request for [5] WORK parts.");
+            return newJob;
+        }
+
+        currentJobs.forEach(job => {
+            let workParts: number = job.body[0];
+            this.totalWorkParts += workParts;
+        })
+
+        if (this.totalWorkParts < 5 && currentJobs.length < maxWorkerCount) {
+
+            console.log("Source: " + this.id + "- Submitting request for [5] WORK parts.");
+            return newJob
+        }
+
+        return undefined;
+    }
 }

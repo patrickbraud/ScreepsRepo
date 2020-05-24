@@ -1,0 +1,20 @@
+Initialize Game Objects
+- Workers check in to make sure their job still exists
+- All structures are found and filtered by type
+
+Check job statuses
+- Game objects check if their existing jobs fulfill all their needs
+    - Sources check if they have enough WORK parts
+    - Dropped energy posts its job or updates its job info
+    - Spawns check if they need energy or update their job
+- Post new jobs to fulfill requirements
+
+Assign idle workers to open jobs
+    - If no idle workers, submit a spawn request to fulfill the job
+
+Perform jobs
+- Workers perform their jobs
+
+Satisfy work requests
+- Spawn worker for highest priority job
+
