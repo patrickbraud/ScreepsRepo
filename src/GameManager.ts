@@ -13,11 +13,9 @@ export namespace GameManager {
 
         geatSpawns();
 
-        // Create the colonies
+        // Create the colony objects
         initializeColonies();
 
-        // initialize all objects for each colony
-        // Find operations only
         colonies.forEach(colony => colony.initialize())
         colonies.forEach(colony => colony.checkJobStatus())
         colonies.forEach(colony => colony.assignWorkers())
