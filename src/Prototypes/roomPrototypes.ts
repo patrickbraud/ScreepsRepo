@@ -1,28 +1,42 @@
 export function roomPrototypes() {
 
-    Object.defineProperty(Room.prototype, 'spawnRequests', {
+    Object.defineProperty(Room.prototype, 'requests', {
         get: function() {
-            if (!this._spawnRequests) {
-                if (!this.memory.spawnRequests) {
-                    this.memory.spawnRequests = {};
+            if (!this._requests) {
+                if (!this.memory.requests) {
+                    this.memory.requests = {};
                 }
-                this._spawnRequests = this.memory.spawnRequests;
+                this._requests = this.memory.requests;
             }
-            return this._spawnRequests;
+            return this._requests;
         },
         enumerable: false,
         configurable: true
     });
 
-    Object.defineProperty(Room.prototype, 'jobs', {
+    Object.defineProperty(Room.prototype, 'tasks', {
         get: function() {
-            if (!this._jobs) {
-                if (!this.memory.jobs) {
-                    this.memory.jobs = {};
+            if (!this._tasks) {
+                if (!this.memory.tasks) {
+                    this.memory.tasks = {};
                 }
-                this._jobs = this.memory.jobs;
+                this._tasks = this.memory.tasks;
             }
-            return this._jobs;
+            return this._tasks;
+        },
+        enumerable: false,
+        configurable: true
+    });
+
+    Object.defineProperty(Room.prototype, 'spawnQueue', {
+        get: function() {
+            if (!this._spawnQueue) {
+                if (!this.memory.spawnQueue) {
+                    this.memory.spawnQueue = {};
+                }
+                this._spawnQueue = this.memory.spawnQueue;
+            }
+            return this._spawnQueue;
         },
         enumerable: false,
         configurable: true

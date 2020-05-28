@@ -1,6 +1,6 @@
-export class JobUtils {
+export class RequestUtils {
 
-    static jobBodyCost(body: number[]): number {
+    static requestBodyCost(body: number[]): number {
 
         let cost: number = 0;
 

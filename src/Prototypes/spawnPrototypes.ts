@@ -1,121 +1,80 @@
-import { JobStatus } from "../Enums/JobStatus";
-import { JobType } from "../Enums/JobType";
+import { RequestStatus } from "../Enums/RequestStatus";
+import { RequestType } from "../Enums/RequestType";
 
 export function spawnPrototypes() {
 
-    StructureSpawn.prototype.checkEnergyRequirements = function(currentJob: any | undefined) : any | undefined {
+    StructureSpawn.prototype.updateRequest = function(existingRequest: any | undefined) : any | undefined {
 
         let missingEnergy = this.store.getFreeCapacity(RESOURCE_ENERGY);
+        if (missingEnergy == 0) return undefined;
 
-        let newJob = {
-            jodId: this.id,
-            jobType: JobType.EnergyRequired,
+        let newRequest = {
+            requestId: this.id,
+            requestType: RequestType.Transport,
             identifier: Math.floor(Math.random() * 100000000),
-            // We include location for distance comparisons
-            depositLocation: {x: this.pos.x, y: this.pos.y},
-            requiredEnergy: missingEnergy,
-            status: JobStatus.Open
+            // The amount of resources available
+            resourceType: RESOURCE_ENERGY,
+            amount: missingEnergy,
+            previousAmount: 0,
+            location: {x: this.pos.x, y: this.pos.y, roomName: this.pos.roomName},
+            // The amount of resources added per tick
+            delta: -1,
+            deltaHistory: [0]
         }
 
-        if (!currentJob) return newJob;
+        if (!existingRequest) return newRequest;
 
-        currentJob.requiredEnergy = missingEnergy;
+        // Update the data for this request
+        existingRequest.previousAmount = existingRequest.amount;
+        existingRequest.amount = missingEnergy;
 
-        console.log("Spawn[" + this.name + "]: \t" + this.id + "\t- EnergyRequired: " + missingEnergy);
+        let deltaThisTick = existingRequest.amount - existingRequest.previousAmount;
+
+        // Create a new average for this tick
+        let delta = deltaThisTick;
+        if (existingRequest.deltaHistory.length > 0) {
+            existingRequest.deltaHistory.forEach((average: number) => {
+                delta += average;
+            });
+            delta /= existingRequest.deltaHistory.length;
+        }
+
+        // Keep a record of the last 100 incomes (oldest -> newest)
+        if (existingRequest.deltaHistory.length == 100) {
+            existingRequest.deltaHistory.shift();
+        }
+
+        existingRequest.delta = delta;
+        existingRequest.deltaHistory.push(deltaThisTick);
+
+        console.log("Spawn: \t\t" + existingRequest.requestId + "\t- Amount: " + existingRequest.amount + "\t\t- Delta: " + existingRequest.delta.toPrecision(2));
 
         return undefined;
     }
 
-    // StructureSpawn.prototype.checkEnergyRequirements = function(currentJobs: any | undefined) : any | undefined {
-
-    //     let missingEnergy = this.store.getFreeCapacity(RESOURCE_ENERGY);
-    //     if (missingEnergy == 0) return undefined;
-
-    //     if (currentJobs) {
-    //         // Account for all current jobs assigned to get energy for this spawn
-    //         currentJobs.forEach(job => {
-
-    //             // If the worker in the spawn queue, then check if the
-    //             // job has room to spawn with the ability to deliver more energy
-    //             if (job.status == JobStatus.SpawnQueue) {
-
-    //                 let jobBodyCost = JobUtils.jobBodyCost(job.body);
-    //                 let roomEnergyCapacity = this.store.getCapacity(RESOURCE_ENERGY)
-
-    //                 while (roomEnergyCapacity - jobBodyCost  >= 100) {
-
-    //                     // It costs 100 energy to spawn the creep with 
-    //                     // the ability to deliver 50 more energy
-    //                     job.body[1] += 1;
-    //                     job.body[2] += 1;
-    //                     job.requiredEnergy += 50;
-
-    //                     jobBodyCost += 100;
-    //                 }
-
-    //                 missingEnergy -= job.requiredEnergy;
-    //             }
-    //             else {
-
-    //                 // If the worker is not spawning, then we should
-    //                 // know exactly how much it expects to deposit
-    //                 missingEnergy -= job.expectedDeposit;
-    //             }
-    //         });
-    //     }
-
-    //     if (missingEnergy > 0) {
-
-    //         // Create a body JUST big enough to hold all of the energy required 
-    //         // Matching CARRY to MOVE ratio to ensure constant movement on plain terrain
-    //         let carryRequired = Math.ceil(missingEnergy / 50);
-    //         let moveRequired = carryRequired;
-
-    //         let body = [0, carryRequired, moveRequired];
-
-    //         let newJob = {
-    //             jodId: this.id,
-    //             jobType: JobType.EnergyRequired,
-    //             identifier: Math.floor(Math.random() * 100000000),
-    //             // We include location for distance comparisons
-    //             depositLocation: {x: this.pos.x, y: this.pos.y},
-    //             requiredEnergy: missingEnergy,
-    //             // The minimum body needed to satisfy this request
-    //             body: body,
-    //             status: JobStatus.Open
-    //         }
-
-    //         console.log("Spawn: " + this.name + "- Submitting request for [" + missingEnergy + "] energy.");
-
-    //         return newJob;
-    //     }
-
-    //     return undefined;
-    // }
-
-    StructureSpawn.prototype.createHarvestBody = function(maxWork: number, maxCarry: number, maxMove: number): BodyPartConstant[] {
+    StructureSpawn.prototype.createHarvestBody = function(): BodyPartConstant[] {
 
         if (this.energyCapacity == 300) return [WORK, WORK, MOVE, MOVE]
 
         let body: BodyPartConstant[] = []
-        for (let workCount = 0; workCount < maxWork; workCount++) {
+        for (let workCount = 0; workCount < 5; workCount++) {
             body.push(WORK);
         }
 
-        for (let carryCount = 0; carryCount < maxCarry; carryCount++) {
+        for (let carryCount = 0; carryCount < 1; carryCount++) {
             body.push(CARRY);
         }
 
-        for (let moveCount = 0; moveCount < maxMove; moveCount++) {
+        for (let moveCount = 0; moveCount < 6; moveCount++) {
             body.push(MOVE);
         }
 
-        let energyRequired = (BODYPART_COST.work * maxWork)
-                             + (BODYPART_COST.carry * maxCarry)
-                             + (BODYPART_COST.move * maxMove);
+        let energyRequired = (BODYPART_COST.work * 5)
+                             + (BODYPART_COST.carry * 1)
+                             + (BODYPART_COST.move * 6);
 
-        let workCount = maxWork;
-        let moveCount = maxMove;
+        let workCount = 5;
+        let moveCount = 6;
 
         // console.log(body);
         // console.log("energyRequired: " + energyRequired)
@@ -129,8 +88,8 @@ export function spawnPrototypes() {
 
             let removePart!: BodyPartConstant;
 
-            if (moveCount > 1) removePart = MOVE;
-            else if (workCount > 4) removePart = WORK;
+            if (moveCount > 1)      { removePart = MOVE; moveCount--; }
+            else if (workCount > 4) { removePart = WORK; workCount--; }
 
             let index: number = body.indexOf(removePart, 0)
             if (index > -1) {
@@ -141,6 +100,13 @@ export function spawnPrototypes() {
         }
 
         return body;
+    }
+
+    StructureSpawn.prototype.createTransportBody = function(amount: number): BodyPartConstant[] {
+
+        if (this.energyCapacity == 300) return [CARRY, MOVE, CARRY, MOVE, CARRY, MOVE]
+
+        return [];
     }
 
     StructureSpawn.prototype.generateCreepName = function(role: string, colonyId: string): string {

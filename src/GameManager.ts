@@ -13,14 +13,28 @@ export namespace GameManager {
 
         geatSpawns();
 
-        // Create the colony objects
+        // Create the colonies
         initializeColonies();
 
-        colonies.forEach(colony => colony.initialize())
-        colonies.forEach(colony => colony.checkJobStatus())
-        colonies.forEach(colony => colony.assignWorkers())
-        colonies.forEach(colony => colony.performJobs())
-        colonies.forEach(colony => colony.satisfyWorkRequests())
+        // Find all game objects
+        colonies.forEach(colony => colony.initialize());
+
+        // Objects update their requests (source/spawn/dropped resource)
+        colonies.forEach(colony => colony.updateRequests());
+
+        // Creeps update their tasks and the respective request
+        colonies.forEach(colony => colony.updateTasks());
+        // Update requests to account for what is planned to be spawned
+        colonies.forEach(colony => colony.updateSpawnRequests());
+
+        // Clean up requests/spawns that are no longer valid
+        colonies.forEach(colony => colony.requestCleanup());
+
+        // Put creeps to work
+        colonies.forEach(colony => colony.runTasks());
+
+        // Start spawn for remaining requests
+        colonies.forEach(colony => colony.spawnIfNecessary());
     }
 
     function initializeColonies() {

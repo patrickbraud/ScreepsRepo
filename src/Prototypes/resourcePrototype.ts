@@ -1,5 +1,4 @@
-import { JobType } from "../Enums/JobType";
-import { JobStatus } from "../Enums/JobStatus";
+import { RequestType as RequestType } from "../Enums/RequestType";
 
 export function resourcePrototypes() {
 
@@ -26,52 +25,50 @@ export function resourcePrototypes() {
         }
     });
 
-    // There should only ever be one job listed to pick up energy from a location
+    // There should only ever be one request listed to pick up energy from a location
     // Every tick, the listing will be updated with how much energy is available
-    //
-    // Deposit jobs will claim energy from this listing and update it  for other deposit jobs
-    //
-    Resource.prototype.updateDroppedEnergyJob = function(existingJob: any | undefined) : any | undefined{
+    Resource.prototype.updateRequest = function(existingRequest: any | undefined) : any | undefined{
 
-        let newJob = {
-            jobId: this.id,
-            jobType: JobType.DroppedEnergy,
+        let newRequest = {
+            requestId: this.id,
+            requestType: RequestType.Transport,
             identifier: Math.floor(Math.random() * 100000000),
             // The amount of resources available
-            amount: this.amount,
+            amount: -1 * this.amount,
             previousAmount: 0,
+            resourceType: this.resourceType,
+            location: {x: this.pos.x, y: this.pos.y, roomName: this.pos.roomName},
             // The amount of resources added per tick
-            averageIncomePerTick: 0,
-            incomeHistory: [0],
-            status: JobStatus.Open
+            delta: 0,
+            deltaHistory: [0]
         }
 
-        if (!existingJob) return newJob;
+        if (!existingRequest) return newRequest;
 
-        // Update the average income data for this resource job
-        existingJob.previousAmount = existingJob.amount;
-        existingJob.amount = this.amount;
+        // Update the average income data for this resource request
+        existingRequest.previousAmount = existingRequest.amount;
+        existingRequest.amount = -1 * this.amount;
 
-        let incomeThisTick = existingJob.amount - existingJob.previousAmount;
+        let deltaThisTick = existingRequest.amount - existingRequest.previousAmount;
 
-        // Create a new moving average for this tick
-        let updatedAverage = incomeThisTick;
-        if (existingJob.incomeHistory.length > 0) {
-            existingJob.incomeHistory.forEach((average: number) => {
-                updatedAverage += average;
+        // Create a new average for this tick
+        let delta = deltaThisTick;
+        if (existingRequest.deltaHistory.length > 0) {
+            existingRequest.deltaHistory.forEach((average: number) => {
+                delta += average;
             });
-            updatedAverage /= existingJob.incomeHistory.length;
+            delta /= existingRequest.deltaHistory.length;
         }
 
         // Keep a record of the last 100 incomes (oldest -> newest)
-        if (existingJob.incomeHistory.length == 100) {
-            existingJob.incomeHistory.shift();
+        if (existingRequest.deltaHistory.length == 100) {
+            existingRequest.deltaHistory.shift();
         }
 
-        existingJob.averageIncomePerTick = updatedAverage;
-        existingJob.incomeHistory.push(incomeThisTick);
+        existingRequest.delta = delta;
+        existingRequest.deltaHistory.push(deltaThisTick);
 
-        console.log("DroppedEnergy: \t" + this.id + "\t- Amount: " + this.amount + "\t\t- Delta: " + incomeThisTick + "\t\t- AvgInc/Tick: " + updatedAverage.toPrecision(2));
+        console.log("DroppedEnergy: \t" + existingRequest.requestId + "\t- Amount: " + existingRequest.amount + "\t\t- Delta: " + existingRequest.delta.toPrecision(2));
 
         return undefined;
     }

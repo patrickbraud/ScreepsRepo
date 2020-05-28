@@ -1,55 +1,52 @@
 import { Screep } from "./Screep";
 import { Colony } from "../Colony";
+import { CreepType } from "../Enums/CreepType";
+import { RequestType } from "../Enums/RequestType";
 
 export class Harvester extends Screep {
 
-    jobIdentifier: number;
-    jobId: string;
-    jobType: string;
-
-    currentJob: {identifier: number, jobType: string, body: number[], status: string} | undefined;
+    colony: Colony;
 
     creep: Creep;
-    colony: Colony;
+    creepType: CreepType;
+
+    requestId: string;
+    request: any;
+
+    task: any;
+    // taskId: number;
+
+    targetSource: Source;
+
+    path: PathStep[];
 
     constructor(creep: Creep, colony: Colony) {
         super(creep, colony);
 
-        this.creep = creep;
         this.colony = colony;
 
-        this.jobId = creep.memory.jobId;
-        this.jobIdentifier = creep.memory.identifier;
+        this.creep = creep;
+        this.creepType = creep.memory.creepType;
+
+        // this.taskId = creep.memory.taskId;
     }
 
-    work(colony: Colony) {
+    taskCheckIn() {
+
+        this.requestId = this.creep.memory.requestId;
+        this.request = this.colony.requestManager.getRequest(RequestType.Harvest, this.requestId)
+
+        this.request.workRequired -= this.creep.getActiveBodyparts(WORK);
+
+        this.targetSource = Game.getObjectById(this.requestId);
+    }
+
+    work() {
 
         // Harvest from our designated source
-        let targetSource = colony.getSourceByID(this.jobId);
-        if (targetSource == undefined) return;
+        if (this.targetSource == undefined) return;
         
-        this.harvest(targetSource);
-
-        // if (this.creep.ticksToLive == 1) {
-        //     this.creep.say("Dying");
-        //     this.colony.jobBoard.removeJob(this.jobType, this.jobId, this.jobIdentifier);
-        // }
-    }
-
-    repairContainerIfNeeded(container: StructureContainer): Boolean {
-        if (container.hits < container.hitsMax) {
-            this.creep.say('🔨repair')
-            this.repairContainer(container);
-            return true;
-        }
-        return false
-    }
-
-    repairContainer(container: StructureContainer) {
-        let repairResult = this.creep.repair(container);
-        if (repairResult == ERR_NOT_IN_RANGE) {
-            this.creep.moveTo(container);
-        }
+        this.harvest(this.targetSource);
     }
 
     harvest(source: Source) {
@@ -59,15 +56,6 @@ export class Harvester extends Screep {
 
             // Move to one of the open spaces
             this.creep.moveTo(source, {ignoreCreeps: false, reusePath: 10})
-        }
-    }
-
-    depositIntoStructure(target: Structure) {
-
-        let transferResult = this.creep.transfer(target, RESOURCE_ENERGY);
-        if (transferResult == ERR_NOT_IN_RANGE) {
-            //super.moveTo(target, this.pathColor);
-            this.creep.moveTo(target, {ignoreCreeps: false, reusePath: 10})
         }
     }
 }

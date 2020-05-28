@@ -1,5 +1,5 @@
-import { JobType } from "../Enums/JobType";
-import { JobStatus } from "../Enums/JobStatus";
+import { RequestType } from "../Enums/RequestType";
+import { RequestStatus } from "../Enums/RequestStatus";
 
 export function sourcePrototypes() {
 
@@ -74,35 +74,21 @@ export function sourcePrototypes() {
         configurable: true
     });
 
-    Source.prototype.checkHarvestJobs = function(currentJobs: any[] | undefined) : any | undefined {
+    Source.prototype.updateRequest = function(currentRequest: any | undefined) : any | undefined {
 
-        let maxWorkerCount = this.harvestLocations.length;
-
-        let newJob = {
-            jobId: this.id,
-            jobType: JobType.Harvest,
+        let newRequest = {
+            requestId: this.id,
+            requestType: RequestType.Harvest,
             identifier: Math.floor(Math.random() * 100000000),
-            targetId: this.id,
-            body: [5, 1, 6],
-            status: JobStatus.Open
+            workRequired: 5
         };
-        
-        if (!currentJobs || currentJobs.length == 0) {
-            console.log("Source: " + this.id + "- Submitting request for [5] WORK parts.");
-            return newJob;
-        }
 
-        currentJobs.forEach(job => {
-            let workParts: number = job.body[0];
-            this.totalWorkParts += workParts;
-        })
+        // if (!currentRequest) {
 
-        if (this.totalWorkParts < 5 && currentJobs.length < maxWorkerCount) {
+        //     console.log("Source: " + this.id + "- Submitting request for [5] WORK parts.");
+        //     return newRequest
+        // }
 
-            console.log("Source: " + this.id + "- Submitting request for [5] WORK parts.");
-            return newJob
-        }
-
-        return undefined;
+        return newRequest;
     }
 }
