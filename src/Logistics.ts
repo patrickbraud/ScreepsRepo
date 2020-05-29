@@ -94,22 +94,6 @@ export class Logistics {
         }
     }
 
-
-
-    private logMathingResults(matching: any) {
-
-        let keys = Object.keys(matching);
-        console.log("Keys: " + JSON.stringify(keys));
-        keys.forEach(key => {
-
-            console.log("---");
-            console.log("Key: " + JSON.stringify(key));
-            console.log("Value: " + JSON.stringify(matching[key]));
-            console.log("---");
-        });
-        
-    }
-
     private transporterPreferences(transporter: Transporter): any[] {
 
         // For this transporter, create a list of requests it could fulfill
@@ -137,15 +121,17 @@ export class Logistics {
         console.log("Availability: " + JSON.stringify(availability));
 
         // How much resource the requeset will have/need after current task completion
-        let predictedAmount = this.getPredictedRequestAmount(transporter, request);
+        let predictedAmount = this.getPredictedAmount(transporter, request);
         console.log("PredictedAmount: " + predictedAmount);
 
         // How much resource the trasnporter will have after current task completion
-        let predictedCarry = this.getPredictedCarry(transporter);
+        let predictedCarry = this.getPredictedCarry(transporter, request);
         console.log("PredictedCarry: " + predictedCarry);
         
         // The amount of resource change this transporter will have for the request
-        let deltaResource = Math.min(predictedAmount, predictedCarry);
+        let deltaResource;
+        if (request.amount > 0) deltaResource = Math.min(predictedAmount, predictedCarry);
+        else                    deltaResource = Math.min(Math.abs(predictedAmount), predictedCarry);
         console.log("DeltaResource: " + deltaResource);
 
         // The number of ticks away the transporter will be from the request target after current task completion
@@ -175,21 +161,23 @@ export class Logistics {
     }
 
     // The predicted amount of available resource when the request can be satisfied
-    private getPredictedCarry(transporter: Transporter): number {
+    private getPredictedCarry(transporter: Transporter, request: any): number {
 
-        let predictedCarry = transporter.creep.store.getCapacity();
+        let predictedCarry;
+        if (request.amount > 0) predictedCarry = transporter.creep.store.getUsedCapacity(request.resourceType);
+        else                    predictedCarry = transporter.creep.store.getFreeCapacity(request.resourceType);
 
         let task = transporter.task;
         if (!task) return predictedCarry;
 
-        let request = this.colony.requestManager.getRequest(task.requestType, task.requestId);
-        if (!request) return predictedCarry;
+        let currentRequest = this.colony.requestManager.getRequest(task.requestType, task.requestId);
+        if (!currentRequest) return predictedCarry;
 
         // get the amount of resource the target will need when the transporter gets there
         // accounting for all other transporters target it
-        let requestAmount = this.getPredictedRequestAmount(transporter, request);
+        let requestAmount = this.getPredictedAmount(transporter, currentRequest);
 
-        predictedCarry -= requestAmount;
+        predictedCarry += -1 * requestAmount;
 
         return predictedCarry;
 
@@ -201,10 +189,10 @@ export class Logistics {
     // By the time this transporter got there, how much resource the request would actually still have/need
     // Account for all other transporters targeting this request
     // Account for the delta  of the request target
-    private getPredictedRequestAmount(transporter: Transporter, request: any) {
+    private getPredictedAmount(transporter: Transporter, request: any) {
 
         let transportersTargeting = this.transporters.filter(otherTransporter => (otherTransporter.task && 
-                                                                                  otherTransporter.requestId == request.requestId && 
+                                                                                  otherTransporter.task.requestId == request.requestId && 
                                                                                   otherTransporter.creep.id != transporter.creep.id));
 
         // The time it would take the transporter to get there * the delta amount of the request target 

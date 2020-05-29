@@ -15,6 +15,8 @@ export class TaskManager {
 
     createTransportTask(request: any): any {
 
+        if (!request) return undefined;
+        
         let transportTask = {
             requestId: request.requestId,
             requestType: RequestType.Transport,

@@ -152,6 +152,8 @@ export class Spawner {
 
     spawnCreep(request: any, body: BodyPartConstant[], spawnOpts: any) {
 
+        if (this.mainSpawn.spawning) return;
+        
         let creepName = this.mainSpawn.generateCreepName(request.requestType, this.mainSpawn.memory.colonyId)
 
         let canSpawn = this.mainSpawn.spawnCreep(body, creepName, { dryRun: true });

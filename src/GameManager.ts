@@ -21,7 +21,6 @@ export namespace GameManager {
 
         // Objects update their requests (source/spawn/dropped resource)
         colonies.forEach(colony => colony.updateRequests());
-
         // Creeps update their tasks and the respective request
         colonies.forEach(colony => colony.updateTasks());
         // Update requests to account for what is planned to be spawned

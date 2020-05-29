@@ -125,10 +125,10 @@ export class Colony {
 
         this.harvesters.forEach(harvester => harvester.taskCheckIn());
 
-        // Each transporter makes sure they have a task
-        this.transporters.forEach(transporter => transporter.getTask());
-        // Then they each update the existing requests to reflect their tasks
+        // Transporters update their current task info
         this.transporters.forEach(transporter => transporter.taskCheckIn());
+        // Any transporter that doesn't have a task gets assigned one
+        this.transporters.forEach(transporter => transporter.getTask());
     }
 
     // Update requests to account for what is planned to be spawned

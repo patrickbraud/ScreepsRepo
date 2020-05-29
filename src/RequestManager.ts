@@ -81,7 +81,7 @@ export class RequestManager {
         requests.forEach((request: any) => {
 
             let target = Game.getObjectById(request.requestId);
-            if (!target || request.amount == 0) this.removeRequest(RequestType.Transport, request.requestId);
+            if (!target) this.removeRequest(RequestType.Transport, request.requestId);
         });
     }
 }
