@@ -80,14 +80,9 @@ export function sourcePrototypes() {
             requestId: this.id,
             requestType: RequestType.Harvest,
             identifier: Math.floor(Math.random() * 100000000),
-            workRequired: 5
+            workRequired: 5,
+            tasks: [] as any[]
         };
-
-        // if (!currentRequest) {
-
-        //     console.log("Source: " + this.id + "- Submitting request for [5] WORK parts.");
-        //     return newRequest
-        // }
 
         return newRequest;
     }

@@ -7,6 +7,7 @@ import { Logistics } from "./Logistics";
 import { TaskManager } from "./TaskManager";
 import { CreepType } from "./Enums/CreepType";
 import { Transporter } from "./Creeps/Transporter";
+import { request } from "http";
 
 export class Colony {
 
@@ -134,8 +135,8 @@ export class Colony {
     // Update requests to account for what is planned to be spawned
     updateSpawnRequests() {
 
-        this.spawner.updateRelatedRequests(RequestType.Harvest);
-        this.spawner.updateRelatedRequests(RequestType.Transport);
+        this.spawner.updateRequestsOfType(RequestType.Harvest);
+        this.spawner.updateRequestsOfType(RequestType.Transport);
     }
 
     // Clean up requests/spawns that are no longer valid
@@ -153,23 +154,85 @@ export class Colony {
 
     spawnIfNecessary() {
 
-        if (this.harvesters.length > 0) {
-
-            let transportRequests = this.requestManager.requests[RequestType.Transport];
-            if (transportRequests) {
-                let requests = Object.values(transportRequests);
-                let choice = _.min(requests, request => request.amount);
-                this.spawner.spawnTransporter(choice);
-                return;
-            }
-
-        }
         let harvestRequests = this.requestManager.requests[RequestType.Harvest];
+        // console.log(JSON.stringify("Harvest Requests: " +  JSON.stringify(harvestRequests)));
         if (harvestRequests) {
             let requests = Object.values(harvestRequests);
-            let choice = _.max(requests, request => request.workRequired);
-            this.spawner.spawnHarvester(choice);
-            return;
+            // console.log("Harvest Requests Values: " + JSON.stringify(requests));
+            if (requests.length > 0) {
+                let choice = _.max(requests, request => request.workRequired);
+                // console.log("Choice: " + JSON.stringify(choice))
+                if (choice) { 
+                    // console.log("Choice: " + choice + "Still spawning it")
+                    this.spawner.spawnHarvester(choice);
+                    return;
+                }
+            }
+        }
+
+        if (this.harvesters.length > 0) {
+
+            let transportRequests: {[requestId: string]: any} = this.requestManager.requests[RequestType.Transport];
+            if (transportRequests) {
+                let requests = Object.values(transportRequests);
+
+
+
+                let pickupRequests = _.filter(requests, request => request.amount < 0);
+                let dropOffpRequests = _.filter(requests, request => request.amount > 0);
+
+                let totalPickup = _.sum(pickupRequests, 'amount');
+                let totalDropOff = _.sum(dropOffpRequests, 'amount');
+                let pickupDelta = _.sum(pickupRequests, 'delta');
+                let dropOffDelta = _.sum(dropOffpRequests, 'delta');
+                console.log("Total Pickup: " + totalPickup + " \tDelta: " + pickupDelta);
+                console.log("Total DropOff: " + totalDropOff + " \tDelta: " + dropOffDelta);
+
+                console.log("TransporterThroughput: " + this.logistics.avgTransporterThroughput);
+
+
+
+                let sortedRequests = _.sortBy(requests, request => -1 * request.amount);
+                
+                for (let requestCount = 0; requestCount < sortedRequests.length; requestCount++){
+                    let request = sortedRequests[requestCount];
+                    // Request for pick-up
+                    if (request.amount < 0){
+
+                        let requestWorkers = this.transporters.filter(transporter => {
+                            return transporter.task && transporter.task.requestId == request.requestId;
+                        })
+                        
+
+                        // let hasWorker = _.contains(request.requestId, _.values(this.logistics.transporterRequestMatches))
+                        // let workerId = this.logistics.transporterRequestMatches[request.requestId];
+                        // console.log("requestId: " + request.requestId + " workers: " + requestWorkers.length);
+                        if (!requestWorkers || requestWorkers.length <= 0) {
+                            this.spawner.spawnTransporter(request);
+                            return;
+                        }
+                    }
+                }
+                // sortedRequests.forEach(request => {
+
+                //     // Request for pick-up
+                //     if (request.amount < 0){
+
+                //         let requestWorkers = this.transporters.filter(transporter => {
+                //             return transporter.task && transporter.task.requestId == request.requestId;
+                //         })
+
+                //         // let hasWorker = _.contains(request.requestId, _.values(this.logistics.transporterRequestMatches))
+                //         // let workerId = this.logistics.transporterRequestMatches[request.requestId];
+                //         // console.log("requestId: " + request.requestId + " workers: " + requestWorkers.length);
+                //         if (!requestWorkers || requestWorkers.length <= 0) {
+                //             this.spawner.spawnTransporter(request);
+                //             console.log("same");
+                //             return;
+                //         }
+                //     }
+                // });
+            }
         }
     }
 

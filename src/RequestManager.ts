@@ -46,14 +46,18 @@ export class RequestManager {
 
         let requestsOfType: {[requestId: string]: any} = this.requests[requestType];
         if (!requestsOfType) {
+            this.requests[requestType] = undefined;
             delete this.requests[requestType];
         }
 
+        requestsOfType[requestId] = undefined;
         delete requestsOfType[requestId];
     }
 
     getRequest(requestType: string, requestId: string): any | undefined {
 
+        if (!requestId) return undefined;
+        
         let requestsOfType: {[requestId: string]: any} = this.requests[requestType];
         if (!requestsOfType) return undefined;
 
@@ -67,7 +71,6 @@ export class RequestManager {
 
         let requests = Object.values(harvestRequests);
         requests.forEach((request: any) => {
-
             if (request.workRequired <= 0) this.removeRequest(RequestType.Harvest, request.requestId);
         });
     }

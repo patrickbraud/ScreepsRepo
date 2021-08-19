@@ -100,7 +100,7 @@ export class Spawner {
         delete spawnsForType[requestId];
     }
 
-    updateRelatedRequests(requestType: string) {
+    updateRequestsOfType(requestType: string) {
 
         let harvestSpawns = this.spawnQueue[requestType];
         if (!harvestSpawns) return;
@@ -127,7 +127,6 @@ export class Spawner {
     }
 
     spawnHarvester(harvestRequest: any) {
-
         let body = this.mainSpawn.createHarvestBody();
 
         let spawnOpts = {
@@ -136,6 +135,11 @@ export class Spawner {
             requestType: harvestRequest.requestType,
         };
 
+        if (!harvestRequest.requestId || !harvestRequest.requestType) {
+            console.log("Bad harvest spawn request: " + JSON.stringify(harvestRequest))
+            this.removeSpawnRequest(RequestType.Harvest, undefined);
+            return;
+        }
         this.spawnCreep(harvestRequest, body, spawnOpts);
     }
 
@@ -146,6 +150,12 @@ export class Spawner {
         let spawnOpts = {
             creepType: CreepType.Transporter,
         };
+
+        if (!transportRequest.requestId || !transportRequest.requestType) {
+            console.log("Bad transport spawn request: " + JSON.stringify(transportRequest));
+            this.removeSpawnRequest(RequestType.Transport, undefined);
+            return;
+        }
 
         this.spawnCreep(transportRequest, body, spawnOpts);
     }

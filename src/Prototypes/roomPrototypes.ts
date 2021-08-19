@@ -14,6 +14,34 @@ export function roomPrototypes() {
         configurable: true
     });
 
+    Object.defineProperty(Room.prototype, 'avgTransporterThroughput', {
+        get: function() {
+            if (!this._avgTransporterThroughput) {
+                if (!this.memory.avgTransporterThroughput) {
+                    this.memory.avgTransporterThroughput = 0;
+                }
+                this._avgTransporterThroughput = this.memory.avgTransporterThroughput;
+            }
+            return this._avgTransporterThroughput;
+        },
+        enumerable: false,
+        configurable: true
+    });
+
+    Object.defineProperty(Room.prototype, 'transporterThroughputHistory', {
+        get: function() {
+            if (!this._transporterThroughputHistory) {
+                if (!this.memory.transporterThroughputHistory) {
+                    this.memory.transporterThroughputHistory = {};
+                }
+                this._transporterThroughputHistory = this.memory.transporterThroughputHistory;
+            }
+            return this._transporterThroughputHistory;
+        },
+        enumerable: false,
+        configurable: true
+    });
+
     Object.defineProperty(Room.prototype, 'tasks', {
         get: function() {
             if (!this._tasks) {

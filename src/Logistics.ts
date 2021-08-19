@@ -3,6 +3,7 @@ import { RequestType } from "./Enums/RequestType";
 import { TransportMatcher } from "./Algorithms/GaleShapley";
 import { CreepType } from "./Enums/CreepType";
 import { Transporter } from "./Creeps/Transporter";
+import { object } from "lodash";
 
 export class Logistics {
 
@@ -14,10 +15,16 @@ export class Logistics {
 
     transporterRequestMatches: {[transporterId: string]: string;}
 
+    avgTransporterThroughput: number;
+    transporterThroughputHistory: {[transporterId: string]: number}
+
     constructor(colony: Colony) {
 
         this.colony = colony;
         this.mainRoom = colony.mainRoom;
+
+        this.avgTransporterThroughput = this.mainRoom.avgTransporterThroughput;
+        this.transporterThroughputHistory = this.mainRoom.transporterThroughputHistory;
     }
 
     initialize(transporters: Transporter[]) {
@@ -30,11 +37,114 @@ export class Logistics {
         this.transporters = transporters
     }
 
-    getTask(transporter: Transporter): any {
+    updateThroughput(transporterId: string, amount: number) {
+        let history = this.transporterThroughputHistory[transporterId];
+        if (!history) {
+            console.log("update throughput: " + transporterId + " - " + amount );
+            this.transporterThroughputHistory[transporterId] = amount
+            this.updateThroughputAverage();
+            return;
+        }
 
+        this.transporterThroughputHistory[transporterId] += amount;
+
+        this.updateThroughputAverage();
+    }
+
+    private updateThroughputAverage(){
+        let transporterIds = Object.keys(this.transporterThroughputHistory);
+        let throughputValues = Object.values(this.transporterThroughputHistory);
+
+        this.avgTransporterThroughput = _.sum(throughputValues) / transporterIds.length;
+
+        transporterIds.forEach(transporterId => {
+            console.log("Throughput: " + this.transporterThroughputHistory[transporterId] + " \tcreep: " + transporterId);
+        })
+    }
+
+    getTask(transporter: Transporter): any {
         if (!this.transporterRequestMatches) {
-            
-            this.transporterRequestMatches = this.createTransportMatching();
+
+            let transporterList = Array.from(this.transporters);
+            transporterList = _.filter(transporterList, transporter => !transporter.task)
+
+            this.transporterRequestMatches = this.createTransportMatching(transporterList);
+
+            let doneMatching: Boolean = true;
+
+            console.log("--------------Transport-Map----------------");
+
+            // let transporterList = Array.from(this.transporters);
+            // for (let count = 0; count < this.transporters.length; count++){
+            // }
+            // let keys = Object.keys(this.transporterRequestMatches);
+            transporterList.forEach(transporter => {
+                let creepId = transporter.creep.id
+                let req = this.transporterRequestMatches[creepId] as any;
+                if (req){
+                    let worker = _.find(this.transporters, transporter => transporter.creep.id == creepId);
+                    
+                    // let workLeft = Math.abs(this.getPredictedAmount(worker, req)) > 0;
+                    // if (workLeft && transporterList && transporterList.length > 0) {
+                    //     // If so, remove this worker from the list, so we can match again
+                    //     transporterList = _.filter(transporterList, transporter => transporter.creep.id != worker.creep.id)
+                    //     doneMatching = false;
+                    // }
+                    transporterList = _.filter(transporterList, transporter => transporter.creep.id != creepId);
+
+                    console.log("| Creep: " + creepId + " RequestId: " + req.requestId + " Amount: " + req.amount + 
+                        "\t- Storage: " + worker.creep.store.getUsedCapacity(RESOURCE_ENERGY ) + " / " +  worker.creep.store.getCapacity(RESOURCE_ENERGY));
+
+
+                    this.transporterRequestMatches = Object.assign({}, this.transporterRequestMatches, this.createTransportMatching(transporterList));
+                }
+            })
+
+            console.log("--------------------------------------------");
+
+            // let transporterList = Array.from(this.transporters);
+            // do {
+            //     doneMatching = true;
+            //     if (!this.transporterRequestMatches) this.transporterRequestMatches = this.createTransportMatching(transporterList)
+            //     else this.transporterRequestMatches = Object.assign({}, this.transporterRequestMatches, this.createTransportMatching(transporterList));
+            //     // this.transporterRequestMatches = this.createTransportMatching(transporterList);
+            //     let keys = Object.keys(this.transporterRequestMatches);
+            //     keys.forEach(creepId => {
+            //        let req = this.transporterRequestMatches[creepId] as any;
+            //        if (!req) {
+            //             console.log('undefined - creepId: ' + creepId);
+            //        }
+
+            //        let worker = _.find(this.transporters, transporter => transporter.creep.id == creepId);
+
+            //        console.log("| Creep: " + creepId + " RequestId: " + req.requestId + " Amount: " + req.amount + 
+            //        "\t- Storage: " + worker.creep.store.getUsedCapacity(RESOURCE_ENERGY ) + " / " +  worker.creep.store.getCapacity(RESOURCE_ENERGY));
+
+            //        // Check if work is still required after this worker finishes its task
+            //         let workLeft = Math.abs(this.getPredictedAmount(worker, req)) > 0;
+            //         if (workLeft && transporterList && transporterList.length > 0) {
+            //             // If so, remove this worker from the list, so we can match again
+            //             transporterList = _.filter(transporterList, transporter => transporter.creep.id != worker.creep.id)
+            //             doneMatching = false;
+            //         }
+            //         console.log("------")
+            //     })
+            // }
+            // while (!doneMatching && transporterList && transporterList.length > 0)
+            // console.log("--------------------------------------------")
+
+            // if (this.transporterRequestMatches){
+
+            //     console.log("--------------Transport-Map----------------")
+            //    let keys = Object.keys(this.transporterRequestMatches);
+            //    keys.forEach(key => {
+            //        let req = this.transporterRequestMatches[key] as any;
+            //        console.log("| Creep: " + key + " RequestId: " + req.requestId + " Amount: " + req.amount);
+            //     //    console.log("| Creep: " + key);
+            //     //    console.log("| Request: " + JSON.stringify(this.transporterRequestMatches[key]));
+            //    })
+            //    console.log("--------------------------------------------")
+            // }
         }
 
         let request = this.transporterRequestMatches[transporter.creep.id];
@@ -42,11 +152,11 @@ export class Logistics {
         return this.colony.taskManager.createTransportTask(request);
     }
 
-    createTransportMatching(): any {
+    createTransportMatching(transporters: Transporter[]): any {
         
         // Map each transporter ID with a list of request IDs sorted by highest resource delta
         let transportPrefs: {[transporterId: string]: string[]} = {};
-        this.transporters.forEach(transporter => {
+        transporters.forEach(transporter => {
             
             let prefs = this.transporterPreferences(transporter);
             transportPrefs[transporter.creep.id] = prefs.map(pref => pref.request.requestId);
@@ -56,12 +166,12 @@ export class Logistics {
         let requestPrefs: {[requestId: string]: string[]} = {};
         this.transportRequests.forEach(request => {
             
-            let transporterPrefs = _.sortBy(this.transporters, transporter => -1 * this.requestPreference(request, transporter));
+            let transporterPrefs = _.sortBy(transporters, transporter => -1 * this.computeDeltaResourcePerTicks(this.requestPreference(request, transporter)));
             requestPrefs[request.requestId] = transporterPrefs.map(transporter => transporter.creep.id);
         });
 
-        this.logTransportPreferences(transportPrefs);
-        this.logRequestPreferences(requestPrefs);
+        //this.logTransportPreferences(transportPrefs);
+        //this.logRequestPreferences(requestPrefs);
 
         let transportMatcher = new TransportMatcher(transportPrefs, requestPrefs);
         let matches = transportMatcher.match();
@@ -78,7 +188,7 @@ export class Logistics {
 
             console.log("--");
             console.log("TransporterId: " + transporterId);
-            console.log("Prefs: " + JSON.stringify(transportPrefs[transporterId]));
+            console.log("Prefs: " + JSON.stringify(transportPrefs[transporterId], null, 2));
             console.log("--");
         }
     }
@@ -89,7 +199,7 @@ export class Logistics {
 
             console.log("--");
             console.log("RequestId: " + requestId);
-            console.log("Prefs: " + JSON.stringify(requestPrefs[requestId]));
+            console.log("Prefs: " + JSON.stringify(requestPrefs[requestId], null, 2));
             console.log("--");
         }
     }
@@ -98,13 +208,24 @@ export class Logistics {
 
         // For this transporter, create a list of requests it could fulfill
         let requestOptions: {request: any, deltaResource: number, deltaTicks: number}[] = []
-        this.transportRequests.forEach(request => {
 
-            requestOptions.push(this.getTransporterDeltaResourceForRequest(transporter, request));
+        this.transportRequests.forEach(request => {
+            let transportDeltaData = this.getTransporterDeltaResourceForRequest(transporter, request);
+            requestOptions.push(transportDeltaData);
+
+            // console.log("creep: " + transporter.creep.id + 
+            // " \t- RequestPrefs: " + transportDeltaData.request.requestId + 
+            // " : DeltaResource: " + transportDeltaData.deltaResource + 
+            // " : DeltaTicks: " + transportDeltaData.deltaTicks + 
+            // " : Delta Resource/Tick: " + this.computeDeltaResourcePerTicks(transportDeltaData));
+            // asdflaksjdf;laskdjfas;ldfkj
+            //if (transportDeltaData.deltaResource > 0) requestOptions.push(transportDeltaData);
+            // asdflaksjdf;laskdjfas;ldfkj
         });
 
-        // sort the list of requests by delta resource / ticksToCompletion in descending order
+        // sort the list of requests by delta resource / ticksToCompletion in ascending order
         return _.sortBy(requestOptions, option => -1 * this.computeDeltaResourcePerTicks(option));
+        // return _.sortBy(requestOptions, option => 1 * this.computeDeltaResourcePerTicks(option));
     }
 
     private requestPreference(request: any, transporter: Transporter): any {
@@ -113,33 +234,32 @@ export class Logistics {
     }
 
     private getTransporterDeltaResourceForRequest(transporter: Transporter, request: any): {request: any, deltaResource: number, deltaTicks: number} {
-
-        console.log("TransporterId: " + transporter.creep.id + " RequestId: " + request.requestId);
+        //console.log("TransporterId: " + transporter.creep.id + " RequestId: " + request.requestId);
 
         // How many ticks until the transporter is available and where it will be after current task completion
         let availability = this.getAvailability(transporter);
-        console.log("Availability: " + JSON.stringify(availability));
+        //console.log("Availability: " + JSON.stringify(availability));
 
         // How much resource the requeset will have/need after current task completion
         let predictedAmount = this.getPredictedAmount(transporter, request);
-        console.log("PredictedAmount: " + predictedAmount);
+        //console.log("PredictedAmount: " + predictedAmount);
 
         // How much resource the trasnporter will have after current task completion
         let predictedCarry = this.getPredictedCarry(transporter, request);
-        console.log("PredictedCarry: " + predictedCarry);
+        //console.log("PredictedCarry: " + predictedCarry);
         
         // The amount of resource change this transporter will have for the request
         let deltaResource;
         if (request.amount > 0) deltaResource = Math.min(predictedAmount, predictedCarry);
         else                    deltaResource = Math.min(Math.abs(predictedAmount), predictedCarry);
-        console.log("DeltaResource: " + deltaResource);
+        //console.log("DeltaResource: " + deltaResource);
 
         // The number of ticks away the transporter will be from the request target after current task completion
         let requestLocation = new RoomPosition(request.location.x, request.location.y, request.location.roomName);
         let path = this.colony.mainRoom.findPath(availability.location, requestLocation);
         let deltaTicks = availability.ticks + path.length;
-        console.log("DeltaTicks: " + deltaTicks);
-        console.log("DeltaResource/Tick: " +  deltaResource / deltaTicks);
+        //console.log("DeltaTicks: " + deltaTicks);
+        //console.log("DeltaResource/Tick: " +  deltaResource / deltaTicks);
         
         return {request, deltaResource, deltaTicks};
     }
@@ -154,10 +274,14 @@ export class Logistics {
 
         if (!transporter.task) return {ticks: 0, location: transporter.creep.pos};
 
-        let taskLocation = transporter.task.finishLocation
-        let lastLocation = new RoomPosition(taskLocation.x, taskLocation.y, taskLocation.roomName);
+        let target: any = Game.getObjectById(transporter.task.requestId);
+        let path = transporter.creep.room.findPath(transporter.creep.pos, target.pos);
 
-        return {ticks: transporter.task.ticksToCompletion, location: lastLocation};
+        let ticksToCompletion = path.length;
+        let finishLocation = new RoomPosition(target.pos.x, target.pos.y, target.pos.roomName);
+
+        return {ticks: ticksToCompletion, location: finishLocation};
+        // return {ticks: 0, location: transporter.creep.pos};
     }
 
     // The predicted amount of available resource when the request can be satisfied

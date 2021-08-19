@@ -11,6 +11,7 @@ export namespace GameManager {
 
     export function Start() {
 
+        console.log("hello");
         geatSpawns();
 
         // Create the colonies

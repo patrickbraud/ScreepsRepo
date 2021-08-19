@@ -36,7 +36,10 @@ export class Harvester extends Screep {
         this.requestId = this.creep.memory.requestId;
         this.request = this.colony.requestManager.getRequest(RequestType.Harvest, this.requestId)
 
+        if (!this.request) console.log("Harvester w/o request. Something Wrong");
+
         this.request.workRequired -= this.creep.getActiveBodyparts(WORK);
+        if (this.request.workRequred < 0) this.request.workRequired = 0;
 
         this.targetSource = Game.getObjectById(this.requestId);
     }

@@ -16,6 +16,8 @@ interface Room {
     spawnQueue: {[requestType: string]: {[requestId: string]: any}}
     sourcesInRoom: Source[];
     exits: {[direction: string]: string};
+    avgTransporterThroughput: number;
+    transporterThroughputHistory: {[transporterId: string]: number};
 }
 
 interface Creep {
