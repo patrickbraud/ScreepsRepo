@@ -1,6 +1,6 @@
 import { RoomMgr } from "./RoomMgr";
 //import { Screep } from "Creeps/Screep";
-import { CreepStatus } from "Enums/CreepEnums";
+import { CreepStatus } from "../Enums/CreepEnums";
 import { CreepMgr } from "./CreepMgr";
 
 export class SourceMgr {
@@ -31,7 +31,7 @@ export class SourceMgr {
 
             let harvesters = source.harvesters;
             let transporters = source.transporters;
-            let body: string[];
+            let body: BodyPartConstant[];
             if (harvesters.length == 0 && transporters.length == 0) {
                 // starting over from scratch
                 body = this._roomManager.baseRoomSpawn.createWorkerBody(1, 2, 2, [CARRY, MOVE, WORK], false);
@@ -96,7 +96,7 @@ export class SourceMgr {
         return false;
     }
 
-    checkHarvesterPrespawn(source: Source, body: string[]): Creep {
+    checkHarvesterPrespawn(source: Source, body: BodyPartConstant[]): Creep {
         for (let creep of source.harvesters) {
             if (creep.memory.TicksFromSpawnToSource != undefined && creep.partCount(WORK) >= 2) {
 

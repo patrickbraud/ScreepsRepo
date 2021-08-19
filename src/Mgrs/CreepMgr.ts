@@ -1,9 +1,9 @@
-import { Harvester } from "Creeps/Harvester";
-import { Upgrader } from "Creeps/Upgrader";
+import { Harvester } from "../Creeps/Harvester";
+import { Upgrader } from "../Creeps/Upgrader";
 import { RoomMgr } from "./RoomMgr";
-import { Transporter } from "Creeps/Transporter";
-import { Builder } from "Creeps/Builder";
-import { Distributor } from "Creeps/Distributor";
+import { Transporter } from "../Creeps/Transporter";
+import { Builder } from "../Creeps/Builder";
+import { Distributor } from "../Creeps/Distributor";
 
 export class CreepMgr {
 

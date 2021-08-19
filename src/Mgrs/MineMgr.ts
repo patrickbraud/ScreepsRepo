@@ -1,6 +1,6 @@
 import { RoomMgr } from "./RoomMgr";
-import { Harvester } from "Creeps/Harvester";
-import { Transporter } from "Creeps/Transporter";
+import { Harvester } from "../Creeps/Harvester";
+import { Transporter } from "../Creeps/Transporter";
 
 export class MineMgr {
 

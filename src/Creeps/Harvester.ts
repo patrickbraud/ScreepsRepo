@@ -1,6 +1,6 @@
-import { CreepStatus } from "Enums/CreepEnums";
+import { CreepStatus } from "../Enums/CreepEnums";
 import { Screep } from "./Screep";
-import { RoomMgr } from "Mgrs/RoomMgr";
+import { RoomMgr } from "../Mgrs/RoomMgr";
 
 export class Harvester extends Screep {
 
@@ -142,8 +142,8 @@ export class Harvester extends Screep {
                 }
 
                 //   - if we DO NOT have transporters, deposit into extensions/spawn that need energy
-                let extensionsAndSpawnNeedEnergy = this.roomMgr.extensions.filter(ext => {
-                    return ext.energy < ext.energyCapacity;
+                let extensionsAndSpawnNeedEnergy: (Extension | Spawn)[] = this.roomMgr.extensions.filter(ext => {
+                    return ext.store.getUsedCapacity(RESOURCE_ENERGY) < ext.store.getCapacity(RESOURCE_ENERGY);
                 })
                 if (this.roomMgr.baseRoomSpawn.energy < this.roomMgr.baseRoomSpawn.energyCapacity) {
                     extensionsAndSpawnNeedEnergy.push(this.roomMgr.baseRoomSpawn);

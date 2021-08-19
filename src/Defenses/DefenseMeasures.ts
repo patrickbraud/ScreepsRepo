@@ -1,5 +1,5 @@
 import { Tower } from "./Tower";
-import { RoomMgr } from "Mgrs/RoomMgr";
+import { RoomMgr } from "../Mgrs/RoomMgr";
 
 export class DefenseMeasures {
 

@@ -1,5 +1,5 @@
 //import { GlobalValues } from "Globals/GlobalValues";
-import { Colony } from "Colony";
+import { Colony } from "./Colony";
 //import { Global } from "Global";
 
 export namespace GameManager {

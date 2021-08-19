@@ -1,6 +1,6 @@
 import { Screep } from "./Screep";
-import { CreepStatus } from "Enums/CreepEnums";
-import { RoomMgr } from "Mgrs/RoomMgr";
+import { CreepStatus } from "../Enums/CreepEnums";
+import { RoomMgr } from "../Mgrs/RoomMgr";
 
 export class Builder extends Screep {
 
@@ -108,7 +108,7 @@ export class Builder extends Screep {
             }
 
             let spawnlink = this.roomMgr.stashMgr.spawnLink;
-            if (spawnlink != undefined && spawnlink.energy > 0) {
+            if (spawnlink != undefined && spawnlink.store.getUsedCapacity(RESOURCE_ENERGY) > 0) {
                 this.CollectionTargetID = spawnlink.id;
                 this.collectFromStructure(spawnlink);
                 return;
@@ -172,7 +172,7 @@ export class Builder extends Screep {
         }
     }
 
-    collectFromStructure(target: Container | Extension | Spawn) {
+    collectFromStructure(target: Container | Extension | Spawn | Link) {
         let withdrawResult = this.creep.withdraw(target, RESOURCE_ENERGY);
         if (withdrawResult == ERR_NOT_IN_RANGE) {
             super.moveTo(target, this.pathColor);

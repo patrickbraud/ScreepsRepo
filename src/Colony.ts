@@ -1,6 +1,6 @@
-import { GameManager } from "GameManager";
-import { RoomMgr } from "Mgrs/RoomMgr";
-import { CreepMgr } from "Mgrs/CreepMgr";
+import { GameManager } from "./GameManager";
+import { RoomMgr } from "./Mgrs/RoomMgr";
+import { CreepMgr } from "./Mgrs/CreepMgr";
 //import { Harvester } from "Creeps/Harvester";
 //import { Upgrader } from "Creeps/Upgrader";
 

@@ -1,11 +1,11 @@
-import { CreepStatus } from "Enums/CreepEnums";
+import { CreepStatus } from "../Enums/CreepEnums";
 
 export function spawnPrototypes() {
 
     StructureSpawn.prototype.createWorkerBody = function(maxWork: number, maxCarry: number, maxMove: number,
-                                                        priority: string[], waitForMax: Boolean): string[] {
+                                                        priority: string[], waitForMax: Boolean): BodyPartConstant[] {
         // Add the minimum of all wanted parts
-        let body: string[] = [];
+        let body: BodyPartConstant[] = [];
         for (let baseWork = 0; baseWork < 1 && baseWork < maxWork; baseWork++) {
             body.push(WORK);
         }
@@ -75,9 +75,9 @@ export function spawnPrototypes() {
         return body;
     };
 
-    StructureSpawn.prototype.createBalancedBody = function(balanceParts: string[], maxPairs: number,  waitForMax: Boolean): string[] {
+    StructureSpawn.prototype.createBalancedBody = function(balanceParts: BodyPartConstant[], maxPairs: number,  waitForMax: Boolean): BodyPartConstant[] {
 
-        let body: string[] = [];
+        let body: BodyPartConstant[] = [];
         let energyRequired = 0;
         let energyAvailable = waitForMax ? this.room.energyCapacityAvailable : this.room.energyAvailable;
 

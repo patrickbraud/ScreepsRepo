@@ -1,6 +1,6 @@
 import { Screep } from "./Screep";
-import { RoomMgr } from "Mgrs/RoomMgr";
-import { CreepStatus } from "Enums/CreepEnums";
+import { RoomMgr } from "../Mgrs/RoomMgr";
+import { CreepStatus } from "../Enums/CreepEnums";
 
 export class Distributor extends Screep {
 
@@ -45,7 +45,7 @@ export class Distributor extends Screep {
         else if (this.Status == CreepStatus.Depositing) {
 
             // * depsoit into extensions/spawn that need energy
-            let structuresNeedEnergy = this.roomMgr.extensions.filter(ext => {
+            let structuresNeedEnergy: Structure[] = this.roomMgr.extensions.filter(ext => {
                 return ext.energy < ext.energyCapacity
             }).sort((a: Structure, b: Structure): number => { return (this.distanceTo(a.pos) - this.distanceTo(b.pos))});
             if (this.roomMgr.baseRoomSpawn.energy < this.roomMgr.baseRoomSpawn.energyCapacity) {

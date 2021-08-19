@@ -1,10 +1,10 @@
-import { Colony } from "Colony";
+import { Colony } from "../Colony";
 import { SourceMgr } from "./SourceMgr";
-import { Screep } from "Creeps/Screep";
+import { Screep } from "../Creeps/Screep";
 import { StashMgr } from "./StashMgr";
 import { CreepMgr } from "./CreepMgr";
-import { CreepStatus } from "Enums/CreepEnums";
-import { DefenseMeasures } from "Defenses/DefenseMeasures";
+import { CreepStatus } from "../Enums/CreepEnums";
+import { DefenseMeasures } from "../Defenses/DefenseMeasures";
 import { MineMgr } from "./MineMgr";
 
 // Manages the rooms for a colony
@@ -121,7 +121,7 @@ export class RoomMgr {
 
         for (let creepName in Game.creeps) {
             if (!Game.creeps[creepName]) {
-                delete Memory.creeps[name];
+                delete Memory.creeps[creepName];
                 console.log('Clearing non-existing creep memory:', creepName);
             }
             let creep = Game.creeps[creepName];

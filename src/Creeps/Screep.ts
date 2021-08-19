@@ -1,6 +1,6 @@
-import { CreepStatus } from "Enums/CreepEnums";
-import { RoomMgr } from "Mgrs/RoomMgr";
-import { RoomUtils } from "Mgrs/RoomUtils";
+import { CreepStatus } from "../Enums/CreepEnums";
+import { RoomMgr } from "../Mgrs/RoomMgr";
+import { RoomUtils } from "../Mgrs/RoomUtils";
 
 export class Screep{
 

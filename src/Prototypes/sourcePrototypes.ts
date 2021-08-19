@@ -1,4 +1,4 @@
-import { RoomUtils } from "Mgrs/RoomUtils";
+import { RoomUtils } from "../Mgrs/RoomUtils";
 
 export function sourcePrototypes() {
 
