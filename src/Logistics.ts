@@ -15,16 +15,10 @@ export class Logistics {
 
     transporterRequestMatches: {[transporterId: string]: string;}
 
-    avgTransporterThroughput: number;
-    transporterThroughputHistory: {[transporterId: string]: number}
-
     constructor(colony: Colony) {
 
         this.colony = colony;
         this.mainRoom = colony.mainRoom;
-
-        this.avgTransporterThroughput = this.mainRoom.avgTransporterThroughput;
-        this.transporterThroughputHistory = this.mainRoom.transporterThroughputHistory;
     }
 
     initialize(transporters: Transporter[]) {
@@ -37,114 +31,28 @@ export class Logistics {
         this.transporters = transporters
     }
 
-    updateThroughput(transporterId: string, amount: number) {
-        let history = this.transporterThroughputHistory[transporterId];
-        if (!history) {
-            console.log("update throughput: " + transporterId + " - " + amount );
-            this.transporterThroughputHistory[transporterId] = amount
-            this.updateThroughputAverage();
-            return;
-        }
-
-        this.transporterThroughputHistory[transporterId] += amount;
-
-        this.updateThroughputAverage();
-    }
-
-    private updateThroughputAverage(){
-        let transporterIds = Object.keys(this.transporterThroughputHistory);
-        let throughputValues = Object.values(this.transporterThroughputHistory);
-
-        this.avgTransporterThroughput = _.sum(throughputValues) / transporterIds.length;
-
-        transporterIds.forEach(transporterId => {
-            console.log("Throughput: " + this.transporterThroughputHistory[transporterId] + " \tcreep: " + transporterId);
-        })
-    }
-
     getTask(transporter: Transporter): any {
         if (!this.transporterRequestMatches) {
 
             let transporterList = Array.from(this.transporters);
-            transporterList = _.filter(transporterList, transporter => !transporter.task)
+
+            // DELETE THIS
+            // transporterList = transporterList.filter(tp => tp.creep.memory.task != 'staging');
+            // MAYBE? MAYBE NOT?? SEEMS ACTUALLY KINDA GOOD??
+            // 
 
             this.transporterRequestMatches = this.createTransportMatching(transporterList);
 
-            let doneMatching: Boolean = true;
-
-            console.log("--------------Transport-Map----------------");
-
-            // let transporterList = Array.from(this.transporters);
-            // for (let count = 0; count < this.transporters.length; count++){
-            // }
-            // let keys = Object.keys(this.transporterRequestMatches);
+            console.log("------------------------------------Transport-Map-Update---------------------------------------");
             transporterList.forEach(transporter => {
                 let creepId = transporter.creep.id
                 let req = this.transporterRequestMatches[creepId] as any;
                 if (req){
-                    let worker = _.find(this.transporters, transporter => transporter.creep.id == creepId);
-                    
-                    // let workLeft = Math.abs(this.getPredictedAmount(worker, req)) > 0;
-                    // if (workLeft && transporterList && transporterList.length > 0) {
-                    //     // If so, remove this worker from the list, so we can match again
-                    //     transporterList = _.filter(transporterList, transporter => transporter.creep.id != worker.creep.id)
-                    //     doneMatching = false;
-                    // }
-                    transporterList = _.filter(transporterList, transporter => transporter.creep.id != creepId);
-
-                    console.log("| Creep: " + creepId + " RequestId: " + req.requestId + " Amount: " + req.amount + 
-                        "\t- Storage: " + worker.creep.store.getUsedCapacity(RESOURCE_ENERGY ) + " / " +  worker.creep.store.getCapacity(RESOURCE_ENERGY));
-
-
-                    this.transporterRequestMatches = Object.assign({}, this.transporterRequestMatches, this.createTransportMatching(transporterList));
+                    console.log("| Creep: " + creepId + "\t RequestId: " + req.requestId + "\t Amount: " + req.amount + 
+                        "\t\t- Storage: " + transporter.creep.store.getUsedCapacity(RESOURCE_ENERGY ) + " / " +  transporter.creep.store.getCapacity(RESOURCE_ENERGY));
                 }
             })
-
-            console.log("--------------------------------------------");
-
-            // let transporterList = Array.from(this.transporters);
-            // do {
-            //     doneMatching = true;
-            //     if (!this.transporterRequestMatches) this.transporterRequestMatches = this.createTransportMatching(transporterList)
-            //     else this.transporterRequestMatches = Object.assign({}, this.transporterRequestMatches, this.createTransportMatching(transporterList));
-            //     // this.transporterRequestMatches = this.createTransportMatching(transporterList);
-            //     let keys = Object.keys(this.transporterRequestMatches);
-            //     keys.forEach(creepId => {
-            //        let req = this.transporterRequestMatches[creepId] as any;
-            //        if (!req) {
-            //             console.log('undefined - creepId: ' + creepId);
-            //        }
-
-            //        let worker = _.find(this.transporters, transporter => transporter.creep.id == creepId);
-
-            //        console.log("| Creep: " + creepId + " RequestId: " + req.requestId + " Amount: " + req.amount + 
-            //        "\t- Storage: " + worker.creep.store.getUsedCapacity(RESOURCE_ENERGY ) + " / " +  worker.creep.store.getCapacity(RESOURCE_ENERGY));
-
-            //        // Check if work is still required after this worker finishes its task
-            //         let workLeft = Math.abs(this.getPredictedAmount(worker, req)) > 0;
-            //         if (workLeft && transporterList && transporterList.length > 0) {
-            //             // If so, remove this worker from the list, so we can match again
-            //             transporterList = _.filter(transporterList, transporter => transporter.creep.id != worker.creep.id)
-            //             doneMatching = false;
-            //         }
-            //         console.log("------")
-            //     })
-            // }
-            // while (!doneMatching && transporterList && transporterList.length > 0)
-            // console.log("--------------------------------------------")
-
-            // if (this.transporterRequestMatches){
-
-            //     console.log("--------------Transport-Map----------------")
-            //    let keys = Object.keys(this.transporterRequestMatches);
-            //    keys.forEach(key => {
-            //        let req = this.transporterRequestMatches[key] as any;
-            //        console.log("| Creep: " + key + " RequestId: " + req.requestId + " Amount: " + req.amount);
-            //     //    console.log("| Creep: " + key);
-            //     //    console.log("| Request: " + JSON.stringify(this.transporterRequestMatches[key]));
-            //    })
-            //    console.log("--------------------------------------------")
-            // }
+            console.log("-----------------------------------------------------------------------------------------------");
         }
 
         let request = this.transporterRequestMatches[transporter.creep.id];
@@ -176,7 +84,7 @@ export class Logistics {
         let transportMatcher = new TransportMatcher(transportPrefs, requestPrefs);
         let matches = transportMatcher.match();
 
-        let requestMatch = _.mapValues(matches, reqID => _.find(this.transportRequests, request => request.requestId == reqID));
+        let requestMatch = _.mapValues(matches, reqID => _.find(this.transportRequests, transportReq => transportReq.requestId == reqID));
         //this.logMathingResults(requestMatch);
 
 		return requestMatch;
@@ -218,9 +126,7 @@ export class Logistics {
             // " : DeltaResource: " + transportDeltaData.deltaResource + 
             // " : DeltaTicks: " + transportDeltaData.deltaTicks + 
             // " : Delta Resource/Tick: " + this.computeDeltaResourcePerTicks(transportDeltaData));
-            // asdflaksjdf;laskdjfas;ldfkj
             //if (transportDeltaData.deltaResource > 0) requestOptions.push(transportDeltaData);
-            // asdflaksjdf;laskdjfas;ldfkj
         });
 
         // sort the list of requests by delta resource / ticksToCompletion in ascending order
@@ -281,7 +187,6 @@ export class Logistics {
         let finishLocation = new RoomPosition(target.pos.x, target.pos.y, target.pos.roomName);
 
         return {ticks: ticksToCompletion, location: finishLocation};
-        // return {ticks: 0, location: transporter.creep.pos};
     }
 
     // The predicted amount of available resource when the request can be satisfied

@@ -21,10 +21,6 @@ export class Spawner {
         this.spawnQueue = this.mainRoom.spawnQueue;
     }
 
-    spawn() {
-        
-    }
-
     // spawnHighestPriority() {
 
     //     if (this.mainSpawn.spawning) return;
@@ -140,12 +136,54 @@ export class Spawner {
             this.removeSpawnRequest(RequestType.Harvest, undefined);
             return;
         }
+
+        let harvestSource: Source = Game.getObjectById(harvestRequest.requestId);
+        if (!harvestRequest) return;
+
+        let sourceHarvesters = this.colony.harvesters.filter(harvester => harvester.requestId == harvestRequest.requestId);
+        if (harvestSource.harvestLocations.length <= sourceHarvesters.length) {
+            this.colony.spawner.removeSpawnRequest(RequestType.Harvest, harvestRequest.requestId);
+            return;
+        }
+
         this.spawnCreep(harvestRequest, body, spawnOpts);
     }
 
-    spawnTransporter(transportRequest: any) {
-
+    spawnTransporterDryRun(transportRequest: any): any {
         let body = this.mainSpawn.createTransportBody(Math.abs(transportRequest.amount));
+
+        let spawnTime = CREEP_SPAWN_TIME * body.length;
+        let spawnCarryParts = _.filter(body, part => part == CARRY).length
+        let totalCarry = spawnCarryParts * 50;
+
+        let distanceToRequest = this.mainRoom.findPath(this.mainSpawn.pos, transportRequest.location).length;
+
+        let totalTimeToRequest = spawnTime + distanceToRequest;
+
+        let expectedAmountAtArrival = transportRequest.amount + transportRequest.delta * totalTimeToRequest;
+
+        console.log('Spawn Transporter DryRun ' + 
+                    '\n\t - Amount: ' + transportRequest.amount + 
+                    '\n\t - Delta: ' + transportRequest.delta + 
+                    '\n\t - ArrivalTime: ' + totalTimeToRequest + 
+                    '\n\t - ArrivalAmount: ' + expectedAmountAtArrival +
+                    '\n\t - TotalCarry: ' + totalCarry);
+
+        if (Math.abs(expectedAmountAtArrival) >= totalCarry) {
+
+            console.log('Transporter Spawn IS Worth It');
+            let dryRunResult = {
+                shouldSpawn: true,
+                body: body
+            }
+            return dryRunResult
+        }
+        
+        console.log('Transporter Spawn IS NOT Worth It');
+        return false;
+    }
+
+    spawnTransporter(transportRequest: any, body: BodyPartConstant[]) {
 
         let spawnOpts = {
             creepType: CreepType.Transporter,
@@ -166,12 +204,12 @@ export class Spawner {
         
         let creepName = this.mainSpawn.generateCreepName(request.requestType, this.mainSpawn.memory.colonyId)
 
-        let canSpawn = this.mainSpawn.spawnCreep(body, creepName, { dryRun: true });
+        let canSpawn = this.mainSpawn.spawnCreep(body, creepName, { dryRun: true, memory: spawnOpts });
         if (canSpawn == OK){
             this.mainSpawn.spawnCreep(body, creepName, { memory: spawnOpts });
         }
         else {
-            console.log("SpawnPending: \t" + request.requestId + "\t- requestType: " + request.requestType + "\t- Body: " + body.toString());
+            console.log("Spawn Pending: \t" + request.requestId + "\t- requestType: " + request.requestType + "\t- Body: " + body.toString());
         }
     }
 }

@@ -23,7 +23,7 @@ export class TaskManager {
             requestId: request.requestId,
             requestType: RequestType.Transport,
             finishLocation: {},
-            ticksToCompletion: 0
+            // ticksToCompletion: 0
         }
 
         // this.tasks[transportTask.identifier] = transportTask;

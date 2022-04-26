@@ -1,12 +1,33 @@
-import { RequestStatus } from "../Enums/RequestStatus";
 import { RequestType } from "../Enums/RequestType";
 
 export function spawnPrototypes() {
 
+    // Object.defineProperty(Spawn.prototype, 'memory', {
+    //     configurable: true,
+    //     get: function() {
+    //         if(_.isUndefined(Memory.SpawnMemory)) {
+    //             Memory.SpawnMemory = {};
+    //         }
+    //         if(!_.isObject(Memory.SpawnMemory)) {
+    //             return undefined;
+    //         }
+    //         return Memory.SpawnMemory[this.id] =
+    //                 Memory.SpawnMemory[this.id] || {};
+    //     },
+    //     set: function(value) {
+    //         if(_.isUndefined(Memory.SpawnMemory)) {
+    //             Memory.SpawnMemory = {};
+    //         }
+    //         if(!_.isObject(Memory.SpawnMemory)) {
+    //             throw new Error('Could not set spawn memory');
+    //         }
+    //         Memory.SpawnMemory[this.id] = value;
+    //     }
+    // });
+
     StructureSpawn.prototype.updateRequest = function(existingRequest: any | undefined) : any | undefined {
 
         let missingEnergy = this.store.getFreeCapacity(RESOURCE_ENERGY);
-        if (missingEnergy == 0) return undefined;
 
         let newRequest = {
             requestId: this.id,
@@ -22,6 +43,7 @@ export function spawnPrototypes() {
             deltaHistory: [0]
         }
 
+        if (missingEnergy == 0) return undefined;
         if (!existingRequest) return newRequest;
 
         // Update the data for this request
@@ -49,8 +71,25 @@ export function spawnPrototypes() {
 
         console.log("Spawn: \t\t" + existingRequest.requestId + "\t- Amount: " + existingRequest.amount + "\t\t- Delta: " + existingRequest.delta.toPrecision(2));
 
-        return undefined;
+        return existingRequest;
     }
+
+    Object.defineProperty(Spawn.prototype, 'energyDump', {
+        get: function (): RoomPosition {
+            if (!this._energyDump) {
+                // Memory undefined
+                if (!this.memory.energyDump) {
+
+                    this.memory.energyDump = new RoomPosition(this.pos.x, this.pos.y - 2, this.room.name);
+                }
+                this._energyDump = this.memory.energyDump;
+                // this._energyDump = new RoomPosition(this.pos.x, this.pos.y - 2, this.room.name);
+            }
+            return this._energyDump;
+        },
+        enumerable: false,
+        configurable: true
+    });
 
     StructureSpawn.prototype.createHarvestBody = function(): BodyPartConstant[] {
 

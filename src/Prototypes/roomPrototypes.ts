@@ -96,15 +96,15 @@ export function roomPrototypes() {
         configurable: true
     });
 
-    Object.defineProperty(Room.prototype, 'exits', {
-        get: function() {
-            if(!this._exits) {
-                if (!this.memory.exits) {
-                    this.memory.exits = Game.map.describeExits(this.name)
-                }
-                this._exits = this.memory.exits;
-            }
-            return this._exits;
-        }
-    });
+    // Object.defineProperty(Room.prototype, 'exits', {
+    //     get: function() {
+    //         if(!this._exits) {
+    //             if (!this.memory.exits) {
+    //                 this.memory.exits = Game.map.describeExits(this.name)
+    //             }
+    //             this._exits = this.memory.exits;
+    //         }
+    //         return this._exits;
+    //     }
+    // });
 }

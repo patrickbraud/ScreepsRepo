@@ -26,8 +26,6 @@ export function sourcePrototypes() {
         }
     });
 
-
-
     // TODO: Create a rolling average of energy harvested per tick
 
 

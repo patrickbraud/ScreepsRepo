@@ -27,7 +27,15 @@ export function resourcePrototypes() {
 
     // There should only ever be one request listed to pick up energy from a location
     // Every tick, the listing will be updated with how much energy is available
-    Resource.prototype.updateRequest = function(existingRequest: any | undefined) : any | undefined{
+    Resource.prototype.updateRequest = function(existingRequest: any | undefined, ignoreLocations: RoomPosition[]) : any | undefined{
+
+        let thisPos = new RoomPosition(this.pos.x, this.pos.y, this.pos.roomName);
+
+        let ignoreLocationMatches = _.filter(ignoreLocations, ignoreLocation => {
+            let pos = new RoomPosition(ignoreLocation.x, ignoreLocation.y, ignoreLocation.roomName);
+            return thisPos.isEqualTo(pos);
+        });
+        if (ignoreLocationMatches.length > 0) return undefined;
 
         let newRequest = {
             requestId: this.id,

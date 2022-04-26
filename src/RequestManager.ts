@@ -28,16 +28,6 @@ export class RequestManager {
         }
 
         requestsOfType[requestDetails.requestId] = requestDetails;
-        // if (!request) {
-        //     // No requests exist for this requestId yet
-        //     // Initialize its request list
-        //     requestsOfType[requestDetails.requestId] = requestDetails;
-        // }
-        // else {
-
-        //     request = requestDetails;
-        //     return;
-        // }
 
         //console.log("New Request - \trequestId: " + requestDetails.requestId + "\t- Type: " + requestDetails.requestType);
     }
@@ -48,7 +38,10 @@ export class RequestManager {
         if (!requestsOfType) {
             this.requests[requestType] = undefined;
             delete this.requests[requestType];
+            return;
         }
+
+        // if (!requestsOfType[requestId]) return;
 
         requestsOfType[requestId] = undefined;
         delete requestsOfType[requestId];

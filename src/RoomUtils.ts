@@ -18,9 +18,8 @@ export class RoomUtils {
         /*    -->
               a * b |
             ^ * O * v
-            | d * c
+            | d * c   
                 <--
-            Start at the x, end at the y
         */
 
         let boxPositions: RoomPosition[] = [];
