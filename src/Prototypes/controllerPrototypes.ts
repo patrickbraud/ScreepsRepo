@@ -1,8 +1,39 @@
 import { RequestType } from "../Enums/RequestType";
 
 export function controllerPrototypes() {
+    StructureController.prototype.updateUpgradeRequest = function(existingRequest: any) : any | undefined {
 
-    StructureController.prototype.updateRequest = function(existingRequest: any | undefined, mainSpawn: StructureSpawn) : any | undefined {
+        let amountPerTick = 15
+        if (this.level == 1) amountPerTick = 10;
+
+        if (!existingRequest) {
+            
+            let requestLocation: RoomPosition = this.pos
+            let newRequest = {
+                requestId: this.id,
+                requestType: RequestType.Upgrade,
+                identifier: Math.floor(Math.random() * 100000000),
+                // The amount of resources available
+                resourceType: RESOURCE_ENERGY,
+                amount: amountPerTick,
+                previousAmount: 0,
+                location: requestLocation,
+                // The amount of resources added per tick
+                delta: 0,
+                deltaHistory: [0]
+            }
+
+            return newRequest;
+        }
+
+        existingRequest.amount = amountPerTick;
+
+        console.log("Controller Upgrade: \t\t- Amount: " + existingRequest.amount + "\t\t- Delta: " + existingRequest.delta.toPrecision(2));
+
+        return existingRequest;
+    }
+
+    StructureController.prototype.updateEnergyRequest = function(existingRequest: any | undefined, mainSpawn: StructureSpawn) : any | undefined {
 
         if (!existingRequest) {
             
@@ -43,8 +74,8 @@ export function controllerPrototypes() {
         // existingRequest.amount = Math.max(0, existingRequest.amount);
         // if (existingRequest.amount == 0) return undefined;
 
-        // let deltaThisTick = existingRequest.amount - existingRequest.previousAmount;
-        let deltaThisTick = existingRequest.existing - existingRequest.previousExisting;
+        let deltaThisTick = existingRequest.amount - existingRequest.previousAmount;
+        // let deltaThisTick = existingRequest.existing - existingRequest.previousExisting;
 
         // Create a new average for this tick
         let delta = deltaThisTick;
@@ -64,9 +95,9 @@ export function controllerPrototypes() {
         existingRequest.deltaHistory.push(deltaThisTick);
 
         // existingRequest.amount = Math.max(2000 - existingRequest.existing, 0); // always request whatever you need to get 2000
-        existingRequest.amount = Math.min(2000, Math.abs(existingRequest.amount - deltaThisTick)); // tricklup to to 2000, subtracking what you have
+        existingRequest.amount = Math.max(0, Math.min(2000, Math.abs(existingRequest.amount - delta))); // tricklup to to 2000, subtracking what you have
 
-        console.log("Control Dump: \t" + existingRequest.requestId + "\t- Amount: " + existingRequest.amount + "\t\t- Delta: " + existingRequest.delta.toPrecision(2));
+        console.log("Controller Dump: \t\t- Amount: " + existingRequest.amount.toPrecision(4) + "\t\t- Delta: " + existingRequest.delta.toPrecision(2));
 
         return existingRequest;
     }
@@ -75,22 +106,22 @@ export function controllerPrototypes() {
 
         let path = this.room.findPath(spawn.pos, this.pos, {ignoreCreeps: true})
 
-        let dumpPos = path[path.length - 3];
+        let dumpPos = path[path.length - 5];
 
         let dumpRoomPosition = new RoomPosition(dumpPos.x, dumpPos.y, this.room.name);
 
         // this.room.visual.circle(dumpRoomPosition, {stroke: 'yellow'})
 
         return dumpRoomPosition
+    }      
+
+    StructureController.prototype.createUpgradeBody = function(): BodyPartConstant[] {
+
+        // if (this.room.energyCapacityAvailable == 300) return [MOVE, CARRY, WORK, WORK];
+
+        // return [];
+        return [MOVE, CARRY, WORK, WORK];
     }
-    
-
-    // StructureController.prototype.createUpgradeBody = function(amount: number): BodyPartConstant[] {
-
-    //     // if (this.energyCapacity == 300) return [CARRY, MOVE, CARRY, MOVE, CARRY, MOVE]
-
-    //     return [];
-    // }
 
     // StructureController.prototype.generateCreepName = function(role: string, colonyId: string): string {
     //     let creepName = "";

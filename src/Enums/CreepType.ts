@@ -1,4 +1,5 @@
 export enum CreepType {
     Harvester = "Harvester",
-    Transporter = "Transporter"
+    Transporter = "Transporter",
+    Upgrader = "Upgrader"
 }

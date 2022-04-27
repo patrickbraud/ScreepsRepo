@@ -49,7 +49,7 @@ export class Logistics {
                 let req = this.transporterRequestMatches[creepId] as any;
                 if (req){
                     console.log("| Creep: " + creepId + "\t RequestId: " + req.requestId + "\t Amount: " + req.amount + 
-                        "\t\t- Storage: " + transporter.creep.store.getUsedCapacity(RESOURCE_ENERGY ) + " / " +  transporter.creep.store.getCapacity(RESOURCE_ENERGY));
+                        "\t\t\t- Storage: " + transporter.creep.store.getUsedCapacity(RESOURCE_ENERGY ) + " / " +  transporter.creep.store.getCapacity(RESOURCE_ENERGY));
                 }
             })
             console.log("-----------------------------------------------------------------------------------------------");

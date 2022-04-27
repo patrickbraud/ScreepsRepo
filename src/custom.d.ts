@@ -25,8 +25,10 @@ interface Creep {
 }
 
 interface StructureController {
+    createUpgradeBody(): BodyPartConstant[];
     getEnergyDump(spawn: StructureSpawn): RoomPosition;
-    updateRequest(existingRequest: any | undefined, mainSpawn: StructureSpawn) : any | undefined;
+    updateUpgradeRequest(existingRequest: any | undefined): any | undefined;
+    updateEnergyRequest(existingRequest: any | undefined, mainSpawn: StructureSpawn) : any | undefined;
 }
 
 interface StructureSpawn {

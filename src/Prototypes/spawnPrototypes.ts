@@ -78,12 +78,12 @@ export function spawnPrototypes() {
         get: function (): RoomPosition {
             if (!this._energyDump) {
                 // Memory undefined
-                if (!this.memory.energyDump) {
+                // if (!this.memory.energyDump) {
 
-                    this.memory.energyDump = new RoomPosition(this.pos.x, this.pos.y - 2, this.room.name);
-                }
-                this._energyDump = this.memory.energyDump;
-                // this._energyDump = new RoomPosition(this.pos.x, this.pos.y - 2, this.room.name);
+                //     this.memory.energyDump = new RoomPosition(this.pos.x, this.pos.y - 2, this.room.name);
+                // }
+                // this._energyDump = this.memory.energyDump;
+                this._energyDump = new RoomPosition(this.pos.x, this.pos.y - 2, this.room.name);
             }
             return this._energyDump;
         },

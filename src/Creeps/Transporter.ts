@@ -112,7 +112,7 @@ export class Transporter {
         }
 
         console.log("transporter: \t" + this.creep.id + " \t- Task Amount: " + 
-        this.request.amount + " \t- Storage: " + this.creep.store.getUsedCapacity(RESOURCE_ENERGY ) + " / " +  this.creep.store.getCapacity(RESOURCE_ENERGY) +
+        this.request.amount + " \t\t- Storage: " + this.creep.store.getUsedCapacity(RESOURCE_ENERGY ) + " / " +  this.creep.store.getCapacity(RESOURCE_ENERGY) +
         "\t- TTL: " + this.creep.ticksToLive);
 
         let result;
@@ -131,7 +131,7 @@ export class Transporter {
                 else {
                     // this.creep.room.visual.circle(controllerDumpLocation, {stroke: 'green'})
                     // console.log('Moving to controller: ' + JSON.stringify(controllerDumpLocation));
-                    result = this.creep.moveTo(controllerDumpLocation);
+                    result = this.creep.moveTo(controllerDumpLocation, {ignoreCreeps: false, reusePath: 10});
                     // console.log('failed move: ' + result);
                 }
             }
@@ -180,7 +180,7 @@ export class Transporter {
         }
         else {
             // console.log('Moving to controller: ' + JSON.stringify(controllerDumpLocation));
-            this.creep.moveTo(spawnDumpLocation);
+            this.creep.moveTo(spawnDumpLocation, {ignoreCreeps: false, reusePath: 10});
             // console.log('failed move: ' + result);
         }
     }
@@ -209,7 +209,7 @@ export class Transporter {
         }
 
         // this.creep.room.visual.circle(randomPosition, {stroke: 'red', fill: 'red'})
-        let result = this.creep.moveTo(randomPosition);
+        let result = this.creep.moveTo(randomPosition, {ignoreCreeps: false, reusePath: 10});
         if (result != OK){
             console.log('Failed Staging Move: ' + result);
         }

@@ -8,6 +8,7 @@ import { TaskManager } from "./TaskManager";
 import { CreepType } from "./Enums/CreepType";
 import { Transporter } from "./Creeps/Transporter";
 import { request } from "http";
+import { Upgrader } from "./Creeps/Upgrader";
 
 export class Colony {
 
@@ -65,6 +66,7 @@ export class Colony {
 
     public harvesters: Harvester[] = [];
     public transporters: Transporter[] = [];
+    public upgraders: Upgrader[] = [];
 
     constructor(colonySpawn: StructureSpawn) {
 
@@ -124,10 +126,14 @@ export class Colony {
 
         // Controllers update their energy required request listing, or post one if it doesn't exist
         let energyDumpRequest = this.requestManager.getRequest(RequestType.Transport, this.controller.id);
-        let newEnergyDumpRequest = this.controller.updateRequest(energyDumpRequest, this.mainSpawn);
+        let newEnergyDumpRequest = this.controller.updateEnergyRequest(energyDumpRequest, this.mainSpawn);
         if (newEnergyDumpRequest) this.requestManager.submitRequest(newEnergyDumpRequest);
         else                      this.requestManager.removeRequest(RequestType.Transport, this.controller.id)
 
+        // Controllers update their upgrade request
+        let upgradeRequest = this.requestManager.getRequest(RequestType.Upgrade, this.controller.id);
+        let updateUpgradeRequest = this.controller.updateUpgradeRequest(upgradeRequest);
+        if (updateUpgradeRequest) this.requestManager.submitRequest(updateUpgradeRequest);
         console.log('----------------------------------------------------------------------------')
     }
 
@@ -138,6 +144,7 @@ export class Colony {
         this.logistics.initialize(this.transporters);
 
         this.harvesters.forEach(harvester => harvester.taskCheckIn());
+        this.upgraders.forEach(upgrader => upgrader.taskCheckIn());
 
         // Transporters update their current task info
         this.transporters.forEach(transporter => transporter.taskCheckIn());
@@ -162,6 +169,7 @@ export class Colony {
     runTasks() {
 
         this.harvesters.forEach(harvester => harvester.work());
+        this.upgraders.forEach(upgrader => upgrader.work());
 
         console.log('--------------------------- Transport Map ----------------------------------')
         this.transporters.forEach(transporter => transporter.work());
@@ -186,15 +194,13 @@ export class Colony {
                             return transporter.task && transporter.task.requestId == request.requestId;
                         })
                         
-
-                        // let hasWorker = _.contains(request.requestId, _.values(this.logistics.transporterRequestMatches))
-                        // let workerId = this.logistics.transporterRequestMatches[request.requestId];
-                        // console.log("requestId: " + request.requestId + " workers: " + requestWorkers.length);
                         if (!requestWorkers || requestWorkers.length <= 0) {
 
                             let dryRunResult = this.spawner.spawnTransporterDryRun(request);
-                            if (dryRunResult) this.spawner.spawnTransporter(request, dryRunResult.body);
-                            return;
+                            if (dryRunResult) { 
+                                this.spawner.spawnTransporter(request, dryRunResult.body);
+                                return;
+                            }
                         }
                     }
                 }
@@ -202,17 +208,28 @@ export class Colony {
         }
 
         let harvestRequests = this.requestManager.requests[RequestType.Harvest];
-        // console.log(JSON.stringify("Harvest Requests: " +  JSON.stringify(harvestRequests)));
         if (harvestRequests) {
             let requests = Object.values(harvestRequests);
-            // console.log("Harvest Requests Values: " + JSON.stringify(requests));
             if (requests.length > 0) {
                 let choice = _.max(requests, request => request.workRequired);
-                // console.log("Choice: " + JSON.stringify(choice))
                 if (choice) { 
-                    // console.log("Choice: " + choice + "Still spawning it")
                     this.spawner.spawnHarvester(choice);
                     return;
+                }
+            }
+        }
+
+        let upgraderRequests = this.requestManager.requests[RequestType.Upgrade];
+        if (upgraderRequests) {
+            let requests = Object.values(upgraderRequests);
+            if (requests.length > 0) {
+                let request = requests[0];
+                if (request.amount > 1){
+                    let dryRunResult = this.spawner.spawnUpgraderDryRun(request);
+                    if (dryRunResult){ 
+                        this.spawner.spawnUpgrader(request, dryRunResult.body);
+                        return;
+                    }
                 }
             }
         }
@@ -244,6 +261,9 @@ export class Colony {
                     
                     case CreepType.Transporter:
                         this.transporters.push(new Transporter(creep, this));
+                        break;
+                    case CreepType.Upgrader:
+                        this.upgraders.push(new Upgrader(creep, this));
                         break;
                 }
             }

@@ -117,6 +117,8 @@ export class Spawner {
 
                     case RequestType.Transport:
                         activeRequest.amount -= Math.max(spawnRequest.amount, 0);
+                    case RequestType.Upgrade:
+                        activeRequest.amount -= Math.max(spawnRequest.amount, 0);
                 }
             }
         });
@@ -196,6 +198,54 @@ export class Spawner {
         }
 
         this.spawnCreep(transportRequest, body, spawnOpts);
+    }
+
+    spawnUpgraderDryRun(upgradeRequest: any) {
+        let body = this.colony.controller.createUpgradeBody();
+
+        let spawnTime = CREEP_SPAWN_TIME * body.length;
+        let spawnWorkParts = _.filter(body, part => part == WORK).length
+        let totalWork = spawnWorkParts;
+
+        let distanceToRequest = this.mainRoom.findPath(this.mainSpawn.pos, upgradeRequest.location).length;
+
+        let totalTimeToRequest = spawnTime + distanceToRequest;
+
+        let expectedAmountAtArrival = upgradeRequest.amount + upgradeRequest.delta * totalTimeToRequest;
+
+        console.log('Spawn Upgrader DryRun ' + 
+                    '\n\t - Amount: ' + upgradeRequest.amount + 
+                    '\n\t - Delta: ' + upgradeRequest.delta + 
+                    '\n\t - ArrivalTime: ' + totalTimeToRequest + 
+                    '\n\t - ArrivalAmount: ' + expectedAmountAtArrival +
+                    '\n\t - TotalWork: ' + totalWork);
+
+        if (Math.abs(expectedAmountAtArrival) >= totalWork) {
+
+            console.log('Upgrader Spawn IS Worth It');
+            let dryRunResult = {
+                shouldSpawn: true,
+                body: body
+            }
+            return dryRunResult
+        }
+        
+        console.log('Upgrader Spawn IS NOT Worth It');
+        return false;
+    }
+
+    spawnUpgrader(upgradeRequest: any, body: BodyPartConstant[]) {
+        let spawnOpts = {
+            creepType: CreepType.Upgrader,
+        };
+
+        if (!upgradeRequest.requestId || !upgradeRequest.requestType) {
+            console.log("Bad upgrade spawn request: " + JSON.stringify(upgradeRequest));
+            this.removeSpawnRequest(RequestType.Upgrade, undefined);
+            return;
+        }
+
+        this.spawnCreep(upgradeRequest, body, spawnOpts);
     }
 
     spawnCreep(request: any, body: BodyPartConstant[], spawnOpts: any) {
