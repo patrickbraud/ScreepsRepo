@@ -121,7 +121,7 @@ export class RoomMgr {
 
         for (let creepName in Game.creeps) {
             if (!Game.creeps[creepName]) {
-                delete Memory.creeps[name];
+                delete Memory.creeps[creepName];
                 console.log('Clearing non-existing creep memory:', creepName);
             }
             let creep = Game.creeps[creepName];
@@ -379,12 +379,12 @@ export class RoomMgr {
         let dropPosition = this.stashMgr.getControllerContainerPos();
         let [energyFound] = this.baseRoom.lookForAt(RESOURCE_ENERGY, dropPosition);
         if (energyFound != undefined) {
-            let droppedControllerEnergy: number = energyFound.amount;
+            let droppedControllerEnergy: number = energyFound[0].amount;
 
             // Get all upgraders who want to collect this dropped energy
             let droppedEnergyCollectors: Creep[] = [];
             for (let creep of this.upgraders) {
-                if (creep.memory.CollectionTargetID == energyFound.id) {
+                if (creep.memory.CollectionTargetID == energyFound[0].id) {
                     droppedEnergyCollectors.push(creep);
                 }
             }
