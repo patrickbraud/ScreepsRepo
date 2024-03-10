@@ -74,7 +74,7 @@ export class Spawner {
 
         let spawnsForType = this.spawnQueue[newRequest.requestType];
         if (!spawnsForType) {
-            spawnsForType[newRequest.requestType] = {};
+            this.spawnQueue[newRequest.requestType] = {};
             spawnsForType = this.spawnQueue[newRequest.requestType];
         }
         
@@ -133,17 +133,18 @@ export class Spawner {
             requestType: harvestRequest.requestType,
         };
 
-        if (!harvestRequest.requestId || !harvestRequest.requestType) {
+        if (!harvestRequest.requestType) {
             console.log("Bad harvest spawn request: " + JSON.stringify(harvestRequest))
-            this.removeSpawnRequest(RequestType.Harvest, undefined);
+            if (harvestRequest.requestId)
+                this.removeSpawnRequest(RequestType.Harvest, harvestRequest.requestId);
             return;
         }
 
-        let harvestSource: Source = Game.getObjectById(harvestRequest.requestId);
+        let harvestSource: Source | null = Game.getObjectById(harvestRequest.requestId);
         if (!harvestRequest) return;
 
         let sourceHarvesters = this.colony.harvesters.filter(harvester => harvester.requestId == harvestRequest.requestId);
-        if (harvestSource.harvestLocations.length <= sourceHarvesters.length) {
+        if (harvestSource!.harvestLocations.length <= sourceHarvesters.length) {
             this.colony.spawner.removeSpawnRequest(RequestType.Harvest, harvestRequest.requestId);
             return;
         }
@@ -193,7 +194,8 @@ export class Spawner {
 
         if (!transportRequest.requestId || !transportRequest.requestType) {
             console.log("Bad transport spawn request: " + JSON.stringify(transportRequest));
-            this.removeSpawnRequest(RequestType.Transport, undefined);
+            if (transportRequest.requestId )
+                this.removeSpawnRequest(RequestType.Transport, transportRequest.requestId );
             return;
         }
 
@@ -241,7 +243,8 @@ export class Spawner {
 
         if (!upgradeRequest.requestId || !upgradeRequest.requestType) {
             console.log("Bad upgrade spawn request: " + JSON.stringify(upgradeRequest));
-            this.removeSpawnRequest(RequestType.Upgrade, undefined);
+            if (upgradeRequest.requestId)
+                this.removeSpawnRequest(RequestType.Upgrade, upgradeRequest.requestId);
             return;
         }
 
@@ -252,7 +255,7 @@ export class Spawner {
 
         if (this.mainSpawn.spawning) return;
         
-        let creepName = this.mainSpawn.generateCreepName(request.requestType, this.mainSpawn.memory.colonyId)
+        let creepName = this.mainSpawn.generateCreepName(request.requestType, this.colony.colonyId.toString())
 
         let canSpawn = this.mainSpawn.spawnCreep(body, creepName, { dryRun: true, memory: spawnOpts });
         if (canSpawn == OK){

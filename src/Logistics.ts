@@ -235,7 +235,9 @@ export class Logistics {
 
             let totalDeposit = 0;
             transportersTargeting!.forEach(transporter => {
-                totalDeposit += transporter.creep.store.getUsedCapacity(request.resourceType);
+                let total = transporter.creep.store.getUsedCapacity(request.resourceType)
+                if (total)
+                    totalDeposit += total;
             });
 
             let predictedAmount = Math.max(request.amount + predictedDelta - totalDeposit, 0);
@@ -246,8 +248,9 @@ export class Logistics {
 
             let totalWithdrawl = 0;
             transportersTargeting!.forEach(transporter => {
-
-                totalWithdrawl += transporter.creep.store.getFreeCapacity(request.resourceType);
+                let total = transporter.creep.store.getFreeCapacity(request.resourceType)
+                if (total)
+                    totalWithdrawl += total;
             });
 
             let predictedAmount = Math.min(request.amount + predictedDelta + totalWithdrawl, 0)

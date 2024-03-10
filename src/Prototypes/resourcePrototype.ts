@@ -2,28 +2,28 @@ import { RequestType as RequestType } from "../Enums/RequestType";
 
 export function resourcePrototypes() {
 
-    Object.defineProperty(Resource.prototype, 'memory', {
-        configurable: true,
-        get: function() {
-            if(_.isUndefined(Memory.ResourceMemory)) {
-                Memory.ResourceMemory = {};
-            }
-            if(!_.isObject(Memory.ResourceMemory)) {
-                return undefined;
-            }
-            return Memory.ResourceMemory[this.id] =
-                    Memory.ResourceMemory[this.id] || {};
-        },
-        set: function(value) {
-            if(_.isUndefined(Memory.ResourceMemory)) {
-                Memory.ResourceMemory = {};
-            }
-            if(!_.isObject(Memory.ResourceMemory)) {
-                throw new Error('Could not set resource memory');
-            }
-            Memory.ResourceMemory[this.id] = value;
-        }
-    });
+    // Object.defineProperty(Resource.prototype, 'memory', {
+    //     configurable: true,
+    //     get: function() {
+    //         if(_.isUndefined(Memory.ResourceMemory)) {
+    //             Memory.ResourceMemory = {};
+    //         }
+    //         if(!_.isObject(Memory.ResourceMemory)) {
+    //             return undefined;
+    //         }
+    //         return Memory.ResourceMemory[this.id] =
+    //                 Memory.ResourceMemory[this.id] || {};
+    //     },
+    //     set: function(value) {
+    //         if(_.isUndefined(Memory.ResourceMemory)) {
+    //             Memory.ResourceMemory = {};
+    //         }
+    //         if(!_.isObject(Memory.ResourceMemory)) {
+    //             throw new Error('Could not set resource memory');
+    //         }
+    //         Memory.ResourceMemory[this.id] = value;
+    //     }
+    // });
 
     // There should only ever be one request listed to pick up energy from a location
     // Every tick, the listing will be updated with how much energy is available

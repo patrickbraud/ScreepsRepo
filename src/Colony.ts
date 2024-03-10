@@ -31,7 +31,7 @@ export class Colony {
     // All remote mines outside of the colony
     public mines: Room[]
 
-    public controller: StructureController | undefined;
+    public controller: StructureController;
     public controllerReserve: RoomPosition;
 
     public mainSpawn: StructureSpawn;
@@ -76,8 +76,8 @@ export class Colony {
         // - Controller
         this.mainRoom = colonySpawn.room;
         this.mainSpawn = colonySpawn;
-        this.colonyId = colonySpawn.memory.colonyId
-        this.controller = colonySpawn.room.controller;
+        this.colonyId = colonySpawn.memory.colonyId;
+        this.controller = colonySpawn.room.controller as StructureController;
         this.controllerReserve = this.controller.getEnergyDump(this.mainSpawn);
 
         // Create our class to handle specific functionality

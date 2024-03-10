@@ -36,7 +36,6 @@ export class RequestManager {
 
         let requestsOfType: {[requestId: string]: any} = this.requests[requestType];
         if (!requestsOfType) {
-            this.requests[requestType] = undefined;
             delete this.requests[requestType];
             return;
         }

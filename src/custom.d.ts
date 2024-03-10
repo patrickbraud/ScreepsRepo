@@ -1,4 +1,12 @@
-interface Memory {
+interface SpawnMemory {
+    // SpawnMemory: {};
+    colonyId: number;
+}
+
+interface CreepMemory{
+    creepType;
+    requestId;
+    task;
 }
 
 interface Source {
@@ -6,18 +14,18 @@ interface Source {
     updateRequest(existingRequest: any | undefined): any | undefined;
 
     totalWorkParts: number;
-    harvestLocations: {x: number, y: number}[];
+    harvestLocations: { x: number, y: number }[];
 }
 
 interface Room {
-    requests: {[requestType: string]: {[requestId: string]: any}};
-    tasks: {[taskId: number]: any};
+    requests: { [requestType: string]: { [requestId: string]: any } };
+    tasks: { [taskId: number]: any };
     //spawnRequests: {[requestId: string]: {identifier: number, requestType: string, body: number[]}[]};
-    spawnQueue: {[requestType: string]: {[requestId: string]: any}}
+    spawnQueue: { [requestType: string]: { [requestId: string]: any } }
     sourcesInRoom: Source[];
     // exits: {[direction: string]: string};
     avgTransporterThroughput: number;
-    transporterThroughputHistory: {[transporterId: string]: number};
+    transporterThroughputHistory: { [transporterId: string]: number };
 }
 
 interface Creep {
@@ -28,12 +36,13 @@ interface StructureController {
     createUpgradeBody(): BodyPartConstant[];
     getEnergyDump(spawn: StructureSpawn): RoomPosition;
     updateUpgradeRequest(existingRequest: any | undefined): any | undefined;
-    updateEnergyRequest(existingRequest: any | undefined, mainSpawn: StructureSpawn) : any | undefined;
+    updateEnergyRequest(existingRequest: any | undefined, mainSpawn: StructureSpawn): any | undefined;
 }
 
 interface StructureSpawn {
+    // colonyId: number;
     energyDump: RoomPosition;
-    updateRequest(existingRequest: any | undefined) : any | undefined;
+    updateRequest(existingRequest: any | undefined): any | undefined;
 
     createHarvestBody(): BodyPartConstant[];
     createTransportBody(amount: number): BodyPartConstant[];

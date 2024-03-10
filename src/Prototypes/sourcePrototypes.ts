@@ -3,28 +3,28 @@ import { RequestStatus } from "../Enums/RequestStatus";
 
 export function sourcePrototypes() {
 
-    Object.defineProperty(Source.prototype, 'memory', {
-        configurable: true,
-        get: function() {
-            if(_.isUndefined(Memory.SourceMemory)) {
-                Memory.SourceMemory = {};
-            }
-            if(!_.isObject(Memory.SourceMemory)) {
-                return undefined;
-            }
-            return Memory.SourceMemory[this.id] =
-                    Memory.SourceMemory[this.id] || {};
-        },
-        set: function(value) {
-            if(_.isUndefined(Memory.SourceMemory)) {
-                Memory.SourceMemory = {};
-            }
-            if(!_.isObject(Memory.SourceMemory)) {
-                throw new Error('Could not set source memory');
-            }
-            Memory.SourceMemory[this.id] = value;
-        }
-    });
+    // Object.defineProperty(Source.prototype, 'memory', {
+    //     configurable: true,
+    //     get: function() {
+    //         if(_.isUndefined(Memory.SourceMemory)) {
+    //             Memory.SourceMemory = {};
+    //         }
+    //         if(!_.isObject(Memory.SourceMemory)) {
+    //             return undefined;
+    //         }
+    //         return Memory.SourceMemory[this.id] =
+    //                 Memory.SourceMemory[this.id] || {};
+    //     },
+    //     set: function(value) {
+    //         if(_.isUndefined(Memory.SourceMemory)) {
+    //             Memory.SourceMemory = {};
+    //         }
+    //         if(!_.isObject(Memory.SourceMemory)) {
+    //             throw new Error('Could not set source memory');
+    //         }
+    //         Memory.SourceMemory[this.id] = value;
+    //     }
+    // });
 
     // TODO: Create a rolling average of energy harvested per tick
 

@@ -41,7 +41,7 @@ export class Harvester extends Screep {
         this.request.workRequired -= this.creep.getActiveBodyparts(WORK);
         if (this.request.workRequred < 0) this.request.workRequired = 0;
 
-        this.targetSource = Game.getObjectById(this.requestId);
+        this.targetSource = Game.getObjectById(this.requestId) as Source;
     }
 
     work() {

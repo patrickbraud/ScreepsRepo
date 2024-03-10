@@ -64,8 +64,10 @@ export class Transporter {
             return;
         }
 
-        if ((this.task.amount > 0 && this.creep.store.getUsedCapacity(this.task.resourceType) <= 0) 
-            || (this.task.amount < 0 && this.creep.store.getFreeCapacity(this.task.resourceType) <= 0)) {
+        let used = this.creep.store.getUsedCapacity(this.task.resourceType);
+        let free = this.creep.store.getFreeCapacity(this.task.resourceType);
+        if ((this.task.amount > 0 && used && used <= 0) 
+            || (this.task.amount < 0 && free && free <= 0)) {
             
             this.creep.memory.task = undefined;
             this.task = undefined;
